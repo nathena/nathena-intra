@@ -21,7 +21,9 @@ public class RequestContext
 {
 	private Map<String,Cookie> _cookies = new ConcurrentHashMap<String, Cookie>();
 	
-	private Map<String, Object> _beans = new ConcurrentHashMap<String, Object>();
+	private Map<String, Object> _cookieBeans = new ConcurrentHashMap<String, Object>();
+	
+	private Map<String, Object> _sessionBeans = new ConcurrentHashMap<String, Object>();
 	
 	private HttpSession httpSession;
 	
@@ -88,7 +90,8 @@ public class RequestContext
 	
 	public void destroy()
 	{
-		_beans.clear();
+		_sessionBeans.clear();
+		_cookieBeans.clear();
 		_cookies.clear();
 	}
 	
@@ -107,57 +110,94 @@ public class RequestContext
 	public HttpServletResponse getResponse() {
 		return response;
 	}
-
+	
 	@SuppressWarnings("unchecked")
-	public <T> T getBean(Class<T> clazz)
+	public <T> T getBeanFormSession(Class<T> clazz)
 	{
 		String key = clazz.getName();
-		if( !_beans.containsKey(key))
+		if( !_sessionBeans.containsKey(key))
+		{
+			String value = (String)getSession(key);
+			if( !StringUtil.isEmpty(value))
+			{
+				_sessionBeans.put(key, JSON.parseObject(value, clazz));
+			}
+		}
+		
+		return (T)_sessionBeans.get(key);
+	}
+	
+	public <T> void addBeanToSession(T object)
+	{
+		String data = JSON.toJSONString(object);
+		String key = object.getClass().getName();
+		
+		setSession(key, data);
+		_sessionBeans.put(key, object);
+	}
+	
+	public <T> void removeBeanFormSession(Class<T> clazz)
+	{
+		String key = clazz.getName();
+		
+		_sessionBeans.remove(key);
+		removeSession(key);
+	}
+	
+	//-- begin cookie cache
+
+	@SuppressWarnings("unchecked")
+	public <T> T getBeanFormCookie(Class<T> clazz)
+	{
+		String key = clazz.getName();
+		if( !_cookieBeans.containsKey(key))
 		{
 			String value = getCookieValue(key);
 			if( !StringUtil.isEmpty(value))
 			{
-				_beans.put(key, JSON.parseObject(value, clazz));
+				_cookieBeans.put(key, JSON.parseObject(value, clazz));
 			}
 		}
 		
-		return (T)_beans.get(key);
+		return (T)_cookieBeans.get(key);
 	}
 	
-	public <T> void addBean(T object)
+	public <T> void addBeanToCookie(T object)
 	{
 		String data = JSON.toJSONString(object);
 		String key = object.getClass().getName();
 		
 		setCookie(key, data);
-		_beans.put(key, object);
+		_cookieBeans.put(key, object);
 	}
 	
-	public <T> void addBean(T object,int cookie_expire)
+	public <T> void addBeanToCookie(T object,int cookie_expire)
 	{
 		String data = JSON.toJSONString(object);
 		String key = object.getClass().getName();
 		
 		setCookie(key, data, cookie_expire);
-		_beans.put(key, object);
+		_cookieBeans.put(key, object);
 	}
 	
-	public <T> void addBean(T object,int cookie_expire,String path)
+	public <T> void addBeanToCookie(T object,int cookie_expire,String path)
 	{
 		String data = JSON.toJSONString(object);
 		String key = object.getClass().getName();
 		
 		setCookie(key, data, cookie_expire,path);
-		_beans.put(key, object);
+		_cookieBeans.put(key, object);
 	}
 	
-	public <T> void removeBean(Class<T> clazz)
+	public <T> void removeBeanFormCookie(Class<T> clazz)
 	{
 		String key = clazz.getName();
 		
-		_beans.remove(key);
+		_cookieBeans.remove(key);
 		removeCookie(key);
 	}
+	
+	//-- end bean cache
 	
 	public Object getSession(String session_name)
 	{
@@ -169,7 +209,7 @@ public class RequestContext
 		httpSession.setAttribute(session_name, mixed);
 	}
 	
-	public void  removeSession(String session_name)
+	public void removeSession(String session_name)
 	{
 		httpSession.removeAttribute(session_name);
 	}
