@@ -9,7 +9,6 @@ public abstract class NestedRuntimeException extends RuntimeException
     
     private String code;
     private String msg;
-    private Object[] values;
     
     public NestedRuntimeException(String code,String msg) 
     {
@@ -17,15 +16,6 @@ public abstract class NestedRuntimeException extends RuntimeException
         
         this.code = code;
         this.msg = msg;
-    }
-    
-    public NestedRuntimeException(String code,String msg,Object[] values) 
-    {
-        super(msg);
-        
-        this.code = code;
-        this.msg = msg;
-        this.values = values;
     }
     
     public NestedRuntimeException(String code ,String msg, Throwable cause) 
@@ -37,16 +27,6 @@ public abstract class NestedRuntimeException extends RuntimeException
         this.cause = cause;
     }
     
-    public NestedRuntimeException(String code ,String msg, Throwable cause,Object[] values) 
-    {
-        super(msg,cause);
-        
-        this.code = code;
-        this.msg = msg;
-        this.cause = cause;
-        this.values = values;
-    }
-    
     public String getCode() {
 		return code;
 	}
@@ -55,10 +35,6 @@ public abstract class NestedRuntimeException extends RuntimeException
 		return msg;
 	}
     
-    public Object[] getValues() {
-		return values;
-	}
-
     /**
      * 返回此 throwable 的 cause；或者如果 cause 不存在或未知，则返回 null。
      *
