@@ -29,19 +29,19 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 			HandlerMethod handlerMethod = (HandlerMethod)handler;
 			Object bean = handlerMethod.getBean();
 			
-			if(bean instanceof MustLoginedInterface)
+			if(bean instanceof BaseControl)
 			{
-				MustLoginedInterface obj = (MustLoginedInterface)bean;
-				if(!obj.isLogined(request,response))
+				BaseControl obj = (BaseControl)bean;
+				if( !obj.preHandle(request, response) )
 				{
 					return false;
 				}
 			}
 			
-			if(bean instanceof BaseControl)
+			if(bean instanceof MustLoginedInterface)
 			{
-				BaseControl obj = (BaseControl)bean;
-				if( !obj.preHandle(request, response) )
+				MustLoginedInterface obj = (MustLoginedInterface)bean;
+				if(!obj.isLogined(request,response))
 				{
 					return false;
 				}
