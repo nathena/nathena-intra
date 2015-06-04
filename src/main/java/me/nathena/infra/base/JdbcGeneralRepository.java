@@ -325,6 +325,67 @@ public class JdbcGeneralRepository{
 		}
 		return result;
 	}
+	
+	public long queryForLong(String sql, Object... paramValue)
+	{
+		try
+		{
+			return namedJdbcTemplate.getJdbcOperations().queryForObject(sql, Long.class, paramValue);
+		}
+		catch(EmptyResultDataAccessException e)
+		{
+			LogHelper.debug(e.getMessage(), e);
+		}
+		catch(Exception e)
+		{
+			throw new JdbcGeneralRepositoryException(e.getMessage(),e);
+		}
+		return 0;
+	}
+	
+	/**
+	 * 查询返回Integer值
+	 * @param countSQL
+	 * @param paramMap
+	 * @return
+	 */
+	public long queryForLong(String sql, Map<String,Object> paramMap) 
+	{
+		try
+		{
+			return namedJdbcTemplate.queryForObject(sql, paramMap, Long.class);
+		}
+		catch(EmptyResultDataAccessException e)
+		{
+			LogHelper.debug(e.getMessage(), e);
+		}
+		catch(Exception e)
+		{
+			throw new JdbcGeneralRepositoryException(e.getMessage(),e);
+		}
+		return 0;
+	}
+	
+	/**
+	 * 查询返回Integer值
+	 * @param paramMap
+	 * @return
+	 * @throws DataAccessException
+	 */
+	public long queryForLong(Map<String,Map<String,Object>> paramMap) 
+	{
+		long result = 0;
+		if( paramMap !=null && paramMap.size()>0 )
+		{
+			String namedsql = paramMap.keySet().iterator().next();
+			Map<String,Object> _paramMap = paramMap.get(namedsql);
+			
+			return queryForLong(namedsql,_paramMap);
+		}
+		return result;
+	}
+	
+	
 	/**
 	 * 查询返回String值
 	 * @param countSQL
