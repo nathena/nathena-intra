@@ -47,7 +47,7 @@ public class AppsContext {
 			web_inf = file.getParentFile().toURI().getPath();
 			webRoot = file.getParentFile().getParentFile().toURI().getPath();
 			
-			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("project.Properties");
+			InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("context.properties");
 			if( null != in )
 			{
 				properties = new Properties();   
