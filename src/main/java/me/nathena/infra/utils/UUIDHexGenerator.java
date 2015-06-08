@@ -25,7 +25,12 @@ public class UUIDHexGenerator
 
     public UUIDHexGenerator() {
     }
-
+    
+    public static String generator()
+    {
+    	return new UUIDHexGenerator().generateUUID();
+    }
+    
     /**
      * Unique across JVMs on this machine (unless they load this class
      * in the same quater second - very unlikely)
