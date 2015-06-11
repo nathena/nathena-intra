@@ -18,10 +18,6 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 		request.setCharacterEncoding("UTF-8");
 		response.setCharacterEncoding("UTF-8");
 		
-		response.setHeader("Cache-Control","no-store"); //Directs caches not to store the page under any circumstance 
-		response.setDateHeader("Expires", -1); //Causes the proxy cache to see the page as "stale" 
-		response.setHeader("Pragma","no-cache"); //HTTP 1.0 backward compatibility 
-		
 		AppsContext.initRequestContext(request, response);
 		
 		if( handler instanceof HandlerMethod)
