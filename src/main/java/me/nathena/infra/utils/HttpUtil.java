@@ -141,7 +141,6 @@ public final class HttpUtil
 				for (Entry<String, String> e : params.entrySet()) 
 				{
 					method.addParameter(e.getKey(), e.getValue());
-					System.out.println(e.getKey()+"   "+e.getValue());
 				}
 			}
 			
