@@ -14,7 +14,7 @@ public class AESCoder
 	private final static String CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
 	
 	//AES 1234567891234567 16
-	private static final Key key = new SecretKeySpec("1234567891234567".getBytes(), KEY_ALGORITHM); //18个字符
+	private static final Key key = new SecretKeySpec(AESCoder.class.getName().getBytes(), KEY_ALGORITHM); //18个字符
 	
 	private AESCoder()
 	{
