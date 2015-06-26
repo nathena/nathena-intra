@@ -17,7 +17,7 @@ public class PBECoder {
     //迭代次数  
 	private static final int ITERATION_COUNT = 100;
 	
-	private static final String password = "hello word";
+	private static final String password = PBECoder.class.getName();
 	
 	private PBECoder()
 	{
