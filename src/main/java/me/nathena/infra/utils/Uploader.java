@@ -58,7 +58,7 @@ public class Uploader {
 	 */
 	private static final String allowUploadFileType = "89504e47 504e470d ffd8ffe1 40496e69 ffd8ffe0 47494638 d0cf11e0 49545346 25504446 504B0304 52617221 00000020667479706d70";
 	
-	private static final String[] allowUploadFileSuffix = new String[]{"gif","jpg","jpeg","png","bmp","mp4"};
+	private static final String[] allowUploadFileSuffix = new String[]{"gif","jpg","jpeg","png","bmp","mp4","zip","rar"};
 	
 	public static String saveAsFile(HttpServletRequest request,String uploadName, String path, Object name) throws IOException,RuntimeException 
 	{
