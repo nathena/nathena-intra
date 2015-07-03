@@ -36,7 +36,7 @@ public final class HttpUtil
 		try
 		{
 			httpclient.executeMethod(get);
-			reponseBody = get.getResponseBodyAsString();
+			reponseBody = new String(get.getResponseBody(),"UTF-8");
 		}
 		catch(Exception e)
 		{
@@ -75,7 +75,7 @@ public final class HttpUtil
 			}
 			
 			httpclient.executeMethod(method);
-			reponseBody = method.getResponseBodyAsString();
+			reponseBody = new String(method.getResponseBody(),"UTF-8");
 		}
 		catch(Exception e)
 		{
