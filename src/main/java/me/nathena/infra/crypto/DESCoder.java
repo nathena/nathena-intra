@@ -18,7 +18,7 @@ public class DESCoder
 	//private final static String CIPHER_ALGORITHM = "DESede/ECB/PKCS5Padding";
 	
 	//DESede 112
-	private static final Key key = new SecretKeySpec(DESCoder.class.getName().getBytes(), KEY_ALGORITHM); //18个字符
+	private static final Key key = new SecretKeySpec("12345678".getBytes(), KEY_ALGORITHM); //18个字符
 	
 	private DESCoder()
 	{
