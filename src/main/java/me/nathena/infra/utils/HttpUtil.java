@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -25,6 +26,7 @@ public final class HttpUtil
 		
 		HttpClient httpclient = new HttpClient();
 		GetMethod get = new GetMethod(url);
+		get.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
 		
 		if( null!=headers && headers.size()>0 )
 		{
@@ -56,6 +58,7 @@ public final class HttpUtil
 		
 		HttpClient httpclient = new HttpClient();
 		PostMethod method = new PostMethod(url);
+		method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
 		
 		if( null!=headers && headers.size()>0 )
 		{
@@ -95,6 +98,7 @@ public final class HttpUtil
 		
 		HttpClient httpclient = new HttpClient();
 		GetMethod method = new GetMethod(url);
+		method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
 		
 		if( null!=headers && headers.size()>0 )
 		{
@@ -126,6 +130,7 @@ public final class HttpUtil
 		
 		HttpClient httpclient = new HttpClient();
 		PostMethod method = new PostMethod(url);
+		method.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
 		
 		if( null!=headers && headers.size()>0 )
 		{
@@ -165,6 +170,7 @@ public final class HttpUtil
 		
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpPost post = new HttpPost(url);
+		post.addHeader(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
 		
 		if( null!=headers && headers.size()>0 )
 		{
@@ -201,6 +207,7 @@ public final class HttpUtil
 		
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpPost post = new HttpPost(url);
+		post.addHeader(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
 		
 		try
 		{
@@ -228,9 +235,10 @@ public final class HttpUtil
 	{
 		HttpClient httpclient = new HttpClient();
 		PostMethod post = new PostMethod("https://tgw.baofoo.com/wapmobile");
+		post.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
 		try { 
 		    httpclient.executeMethod(post);
-		    System.out.println(new String(post.getResponseBody(),"UTF-8"));
+		    System.out.println(post.getResponseBodyAsString());
 		  } finally {
 			  post.releaseConnection();
 		  }
