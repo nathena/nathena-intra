@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -105,6 +107,59 @@ public class Uploader {
 		}
 
 		return savedName;
+	}
+
+	public static List<String> saveAsFiles(HttpServletRequest request,String uploadName, String path, Object name) throws IOException,RuntimeException
+	{
+		if( null == request || StringUtil.isEmpty(uploadName) || StringUtil.isEmpty(path) || StringUtil.isEmpty(name) )
+		{
+			throw new RuntimeException("上传文件参数有错");
+		}
+
+		String savedName = "";
+		List<String> fileNames = new ArrayList<>();
+		try
+		{
+			MultipartHttpServletRequest picRequest = (MultipartHttpServletRequest) request;
+			List<MultipartFile> tmpfiles = picRequest.getFiles(uploadName);
+
+			if(CollectionUtil.isEmpty(tmpfiles)) {
+				return fileNames;
+			}
+
+			int index = 0;
+			for(MultipartFile tmpfile : tmpfiles) {
+				String suffix = index ++ + "";
+				if (null != tmpfile && 0<tmpfile.getSize() ) {
+					byte[] data = tmpfile.getBytes();
+					if (!validateType(data)) {
+						throw new RuntimeException("不支持的上传类型");
+					}
+
+					//检查扩展名
+					String tmpfileName = tmpfile.getOriginalFilename();
+					String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
+					if( null != fileExt ) {
+						if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt)) {
+							throw new RuntimeException("上传文件扩展名是不允许的扩展名。\n只允许" + allowUploadFileSuffix + "格式。");
+						}
+
+						savedName = saveFile(data, path, name + suffix + "." + fileExt);
+						fileNames.add(savedName);
+					}
+				}
+				else {
+					LogHelper.info(" ==== Uploader saveAsFile 上传文件 "+uploadName+" 为空");
+				}
+			}
+
+		}
+		catch(ClassCastException e)
+		{
+			LogHelper.error(e.getMessage(), e);
+		}
+
+		return fileNames;
 	}
 	
 	public static String saveAsFile(HttpServletRequest request,String uploadName, String path, Object name,long maxSize) throws IOException,RuntimeException 
