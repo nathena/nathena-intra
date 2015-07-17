@@ -7,6 +7,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -185,9 +186,9 @@ public final class HttpUtil
 			{
 				post.setEntity(new StringEntity(params));
 			}
-			
-			httpclient.execute(post);
-			reponseBody = EntityUtils.toByteArray(post.getEntity());
+
+			CloseableHttpResponse response = httpclient.execute(post);
+			reponseBody = EntityUtils.toByteArray(response.getEntity());
 		}
 		catch(Exception e)
 		{
@@ -215,9 +216,9 @@ public final class HttpUtil
 			{
 				post.setEntity(new StringEntity(params));
 			}
-			
-			httpclient.execute(post);
-			reponseBody = EntityUtils.toByteArray(post.getEntity());
+
+			CloseableHttpResponse response = httpclient.execute(post);
+			reponseBody = EntityUtils.toByteArray(response.getEntity());
 		}
 		catch(Exception e)
 		{
