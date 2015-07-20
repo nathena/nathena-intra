@@ -29,6 +29,10 @@ public class AppsContext {
 	private static String webRoot;
 	private static String classPath;
 	private static String web_inf;
+	//手动为服务器分配的mac id 做分布式时可以作为单台设备的标示,生成某些唯一标示数据时有用 Gaowx 2015-7-14
+	private static String server_mac_id;
+	private static String image_uri = "";
+	private static String video_uri = "";
 	private static ApplicationContext springContext;
 	private static Properties properties;
 	
@@ -58,6 +62,10 @@ public class AppsContext {
 					upload_tmp_path = properties.getProperty("upload_tmp_path");
 					upload_uri      = properties.getProperty("upload_uri");
 					static_uri      = properties.getProperty("static_uri");
+					//
+					server_mac_id   = properties.getProperty("server_mac_id");
+					image_uri      = properties.getProperty("img_uri");
+					video_uri   = properties.getProperty("video_uri");
 				}
 				catch (IOException e) 
 				{   
@@ -146,7 +154,15 @@ public class AppsContext {
 	{
 		return static_uri;
 	}
-	
+	public static String serverMacId() {
+		return server_mac_id;
+	}
+	public static String imageUri() {
+		return image_uri;
+	}
+	public static String videoUri() {
+		return video_uri;
+	}
 	public static String getProperty(String key)
 	{
 		if( null != properties )
