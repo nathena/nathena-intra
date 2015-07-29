@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 /**
  * 
@@ -171,8 +172,9 @@ public final class HttpUtil
 		
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpPost post = new HttpPost(url);
-		post.addHeader(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
-		
+		post.setHeader(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
+
+
 		if( null!=headers && headers.size()>0 )
 		{
 			for(String key : headers.keySet())
@@ -184,7 +186,7 @@ public final class HttpUtil
 		{
 			if(params != null)
 			{
-				post.setEntity(new StringEntity(params));
+				post.setEntity(new StringEntity(params, HTTP.UTF_8));
 			}
 
 			CloseableHttpResponse response = httpclient.execute(post);
@@ -208,13 +210,13 @@ public final class HttpUtil
 		
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpPost post = new HttpPost(url);
-		post.addHeader(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
-		
+		post.setHeader(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
+
 		try
 		{
 			if(params != null)
 			{
-				post.setEntity(new StringEntity(params));
+				post.setEntity(new StringEntity(params, HTTP.UTF_8));
 			}
 
 			CloseableHttpResponse response = httpclient.execute(post);
@@ -234,14 +236,15 @@ public final class HttpUtil
 	
 	public static void main(String[] arg) throws Exception
 	{
-		HttpClient httpclient = new HttpClient();
-		PostMethod post = new PostMethod("https://tgw.baofoo.com/wapmobile");
-		post.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
-		try { 
-		    httpclient.executeMethod(post);
-		    System.out.println(post.getResponseBodyAsString());
-		  } finally {
-			  post.releaseConnection();
-		  }
+//		HttpClient httpclient = new HttpClient();
+//		PostMethod post = new PostMethod("https://tgw.baofoo.com/wapmobile");
+//		post.getParams().setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET,"UTF-8");
+//		try {
+//		    httpclient.executeMethod(post);
+//		    System.out.println(post.getResponseBodyAsString());
+//		  } finally {
+//			  post.releaseConnection();
+//		  }
+		HttpUtil.doRestPost("http://www.baidu.com", "在遥");
 	}
 }
