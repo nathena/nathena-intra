@@ -16,7 +16,8 @@ import java.util.TimeZone;
 public final class DateTimeUtil 
 {
 	public static final String ymd = "yyyy-MM-dd";
-	
+	public static final String ymdhm = "yyyy-MM-dd HH:mm";
+
 	private static final long ONE_MINUTE = 60000L;  
     private static final long ONE_HOUR = 3600000L;  
     private static final long ONE_DAY = 86400000L;  
