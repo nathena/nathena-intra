@@ -59,7 +59,7 @@ public class RequestContext
 	{
 		this.request = request;
 		this.response = response;
-		
+
 		String severName = request.getServerName();
 		String _server = "";
 		if( !StringUtil.isEmpty(severName) && !Validator.isIpv4(severName) && !"localhost".equalsIgnoreCase(severName))
