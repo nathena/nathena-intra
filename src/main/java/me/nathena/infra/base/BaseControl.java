@@ -24,7 +24,7 @@ public abstract class BaseControl {
 	
 	public void toResponse(Object content)
 	{
-		toResponse(content,"text/html");
+		toResponse(content,"text/plain");
 	}
 	
 	public int getRequestPageNo()
