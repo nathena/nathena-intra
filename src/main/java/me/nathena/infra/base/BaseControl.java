@@ -25,7 +25,7 @@ public abstract class BaseControl {
 	
 	public void toResponse(Object content)
 	{
-		LogHelper.debug("返回结果:==" + content.toString() + "==");
+		LogHelper.debug("\n返回结果:==" + content.toString() + "==");
 		toResponse(content,"text/plain");
 	}
 	
