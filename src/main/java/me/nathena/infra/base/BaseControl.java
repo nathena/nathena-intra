@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import me.nathena.infra.context.AppsContext;
 import me.nathena.infra.context.RequestContext;
+import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.NumberUtil;
 
 public abstract class BaseControl {
@@ -24,6 +25,7 @@ public abstract class BaseControl {
 	
 	public void toResponse(Object content)
 	{
+		LogHelper.debug("返回结果:==" + content.toString() + "==");
 		toResponse(content,"text/plain");
 	}
 	
