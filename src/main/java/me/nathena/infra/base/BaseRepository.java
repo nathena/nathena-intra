@@ -189,11 +189,11 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	 * @param t
 	 * @return T
 	 */
-	public T update(T t, String... ignoreUpdateFileds)	{
+	public T update(T t, String... forceUpdateFileds)	{
 		try
 		{
 			Map<String,Object> paramMap = new HashMap<String, Object>();
-			List<String> ignoreFileds = Arrays.asList(ignoreUpdateFileds);
+			List<String> forceFileds = Arrays.asList(forceUpdateFileds);
 			
 			StringBuilder sb = new StringBuilder(" update `");
 			sb.append(tableName);
@@ -217,7 +217,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				method = EntitySpecification.getReadMethod(field);
 				val = method.invoke(t);
 				
-				if(!ignoreFileds.contains(field.getName()) && !isTransientValue(field, val))
+				if(forceFileds.contains(field.getName()) || !isTransientValue(field, val))
 				{
 					sb.append(sp).append("`").append(name).append("` = :"+name);
 					//sb.append(sp).append(name).append(" = :"+name);
@@ -572,7 +572,6 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	
 	private static boolean isTransientValue(Field field,Object value)
 	{
-		return value==null;
-		//|| ( PrimitiveTypeChecked.checkNumberType(field.getType()) && "0".equals(value.toString()) );
+		return value==null || ( PrimitiveTypeChecked.checkNumberType(field.getType()) && "0".equals(value.toString()) );
 	}
 }
