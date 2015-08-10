@@ -3,8 +3,10 @@ package me.nathena.infra.base;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -146,6 +148,76 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				val = method.invoke(t);
 				
 				if(!isTransientValue(field,val))
+				{
+					sb.append(sp).append("`").append(name).append("` = :"+name);
+					//sb.append(sp).append(name).append(" = :"+name);
+					paramMap.put(name, val);
+					
+					sp=" , ";
+				}
+			}
+			
+			sp=" where ";
+			fieldIter = ids.iterator();
+			while(fieldIter.hasNext())
+			{
+				field = fieldIter.next();
+				name = EntitySpecification.getName(field);
+				method = EntitySpecification.getReadMethod(field);
+				val = method.invoke(t);
+				
+				sb.append(sp).append("`").append(name).append("` = :"+name);
+				//sb.append(sp).append(name).append(" = :"+name);
+				sp=" and ";
+				
+				paramMap.put(name, val);
+			}
+			
+			jdbc.commandUpdate(sb.toString(),paramMap);
+			
+			return t;
+		}
+		catch(Exception e)
+		{
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
+		}
+	}
+	/**
+	 * 
+	 * <p>Title: update</p> 
+	 * <p>Description: </p> 
+	 * @param t
+	 * @return T
+	 */
+	public T update(T t, String... ignoreUpdateFileds)	{
+		try
+		{
+			Map<String,Object> paramMap = new HashMap<String, Object>();
+			List<String> ignoreFileds = Arrays.asList(ignoreUpdateFileds);
+			
+			StringBuilder sb = new StringBuilder(" update `");
+			sb.append(tableName);
+			sb.append("` set ");
+			String sp="";
+			
+			Field field = null;
+			String name = null;
+			Method method = null;
+			Object val = null;
+			Iterator<Field> fieldIter = fields.iterator();
+			while(fieldIter.hasNext())
+			{
+				field = fieldIter.next();
+				if( ids.contains(field))
+				{
+					continue;
+				}
+				
+				name = EntitySpecification.getName(field);
+				method = EntitySpecification.getReadMethod(field);
+				val = method.invoke(t);
+				
+				if(!ignoreFileds.contains(field.getName()) && !isTransientValue(field, val))
 				{
 					sb.append(sp).append("`").append(name).append("` = :"+name);
 					//sb.append(sp).append(name).append(" = :"+name);
@@ -500,6 +572,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	
 	private static boolean isTransientValue(Field field,Object value)
 	{
-		return value==null || ( PrimitiveTypeChecked.checkNumberType(field.getType()) && "0".equals(value.toString()) );
+		return value==null;
+		//|| ( PrimitiveTypeChecked.checkNumberType(field.getType()) && "0".equals(value.toString()) );
 	}
 }

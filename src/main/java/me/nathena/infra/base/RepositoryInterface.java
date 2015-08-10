@@ -25,6 +25,15 @@ public interface RepositoryInterface<T> {
 	
 	/**
 	 * 
+	 * <p>Title: update</p> 
+	 * <p>Description: </p> 
+	 * @param t
+	 * @return T
+	 */
+	public T update(T t, String... ignoreUpdateFileds);
+	
+	/**
+	 * 
 	 * <p>Title: remove</p> 
 	 * <p>Description: 删除</p> 
 	 * @param t void
