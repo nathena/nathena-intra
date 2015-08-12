@@ -1,14 +1,12 @@
 package me.nathena.infra.utils;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
+
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * 说明：时间工具类
@@ -72,29 +70,24 @@ public final class DateTimeUtil
 	 * @param format 转化格式
 	 * @return String 
 	 */
-	public static String getDateToStr(Date date,String format)
-	{
-		try
-		{
-			if( null == date )
-			{
-				return "";
-			}
-			
-			SimpleDateFormat simpleDateFormat = getSimpleDateFormat(format);
-			
-			return simpleDateFormat.format(date);
-			
-		}catch(Exception ex){
-			//LogHelper.error(ex.getMessage(),ex);
+	public static String getDateToStr(Date date, String format) {
+		if(date == null) {
+			return "";
 		}
-		return "";
+		TimeZone tz = TimeZone.getTimeZone("GMT+8");
+		if (format == null) {
+			format = "yyyyMMdd HH:mm";
+		}
+		Calendar c = Calendar.getInstance();
+		c.setTimeInMillis(date.getTime());
+
+		return DateFormatUtils.format(c, format, tz, Locale.US);
 	}
 	/**
 	 * @说明 得到格式为 format 的日期Str
 	 * @param date 日期
 	 * @param format 转化格式
-	 * @return String 
+	 * @return String
 	 */
 	public static String getDateToStr(String dateStr,String format1,String format2)
 	{
@@ -139,47 +132,54 @@ public final class DateTimeUtil
 		return date;
 		
 	}
-	
-	public static long getStringToLong(String str,String format)
-	{
-		long time = 0;
-		try
-		{
-			SimpleDateFormat simpleDateFormat = getSimpleDateFormat(format);
-			
-			Date date = simpleDateFormat.parse(str);
-			
-			time = date.getTime();
-		}
-		catch(Exception pe)
-		{
-			//LogHelper.error(pe.getMessage(),pe);
-		}
-		return time;
+
+	/**
+	 * 2015-08-08 TO date start time
+	 * @param time
+	 * @return
+	 */
+	public static Date getDayStart(String time) {
+		long timestamp = stringToLong(time);
+		return getDayStartFromMills(timestamp);
 	}
-	
-	public static int getStringToInt(String str,String format)
-	{
-		int time = 0;
-		try
-		{
-			time = (int)Math.ceil(getStringToLong(str,format)/1000);
-		}
-		catch(Exception pe)
-		{
-			//LogHelper.error(pe.getMessage(),pe);
-		}
-		return time;
+
+	public static Date getDayEnd(String time) {
+		long timestamp = stringToLong(time);
+		return getDayEndFromMills(timestamp);
 	}
-	
-	public static int getDateToInt(Date date)
-	{
-		return (int)Math.ceil(getDateToLong(date)/1000);
+
+	public static long stringToLong(String time) {
+		return stringToLong(time, null);
+
 	}
-	
-	public static long getDateToLong(Date date)
-	{
-		return date.getTime();
+
+
+	public static long stringToLong(String time, String[] format) {
+		if (format == null) {
+			format = new String[]{
+					"yyyy-MM-dd HH:mm:ss"
+					, "yyyy-MM-dd HH:mm"
+					, "yyyy-MM-dd HH"
+					, "yyyy-MM-dd"
+					, "yyyyMMdd HH:mm:ss"
+					, "yyyyMMdd HH:mm"
+					, "yyyyMMdd HH"
+					, "yyyyMMdd"
+					, "yyyyMM"
+					, "yyyy/MM/dd"
+					, "yyyy/MM"
+					, "yyyy.MM.dd HH:mm:ss"
+					, "yyyy.MM.dd HH:mm"
+					, "yyyy.MM.dd HH"
+					, "yyyy.MM.dd"};
+		}
+		Date date = null;
+		try {
+			date = DateUtils.parseDate(time, format);
+			return date.getTime();
+		} catch (ParseException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public static Date getTimeStampToDate(int timestamp)
@@ -204,11 +204,7 @@ public final class DateTimeUtil
 	}
 	public static String getTimeStampToString(int timestamp,String format)
 	{
-		return getDateToStr(getTimeStampToDate(timestamp),format);
-	}
-	public static String getTimeStampToString(String timestamp,String format)
-	{
-		return getDateToStr(getTimeStampToDate(timestamp),format);
+		return getDateToStr(getTimeStampToDate(timestamp), format);
 	}
 	
 	/**
@@ -655,32 +651,106 @@ public final class DateTimeUtil
     private static long toYears(long date) {  
         return toMonths(date) / 365L;  
     }
-	
+
+
+	public static Date getMonthEndFromMills(long time) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(time);
+		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return calendar.getTime();
+	}
+
+	public static Date getMonthStartFromMills(long time) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(time);
+		calendar.setFirstDayOfWeek(Calendar.MONDAY);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime();
+	}
+
+	public static Date MonthEnd() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.MONTH, 1);
+		calendar.set(Calendar.DAY_OF_MONTH, 0);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return new Date(calendar.getTimeInMillis());
+	}
+
+	public static Date nextMonth(int n) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.MONTH, n);
+		return new Date(calendar.getTimeInMillis());
+	}
+
+	/**
+	 * 获取月份开始时间
+	 * @param next 月份偏移，0表示当月，1表示下个月
+	 * @return
+	 */
+	public static Date getMonthStart(int next) {
+		return getMonthStartFromMills(nextMonth(next).getTime());
+	}
+
+	/**
+	 * 获取月份结束时间
+	 * @param next 月份偏移，0表示当月，1表示下个月
+	 * @return
+	 */
+	public static Date getMonthEnd(int next) {
+		return getMonthEndFromMills(nextMonth(next).getTime());
+	}
+
+	public static Date getTodayStart(){
+		return getDayStartFromMills(System.currentTimeMillis());
+	}
+
+	public static Date getTodayEnd(){
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 59);
+		return new Date(calendar.getTimeInMillis());
+	}
+
+	public static Date getDayStartFromMills(long mills){
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(mills);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return new Date(calendar.getTimeInMillis());
+	}
+
+	public static Date getDayEndFromMills(long mills){
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(mills);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return new Date(calendar.getTimeInMillis());
+	}
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-//		System.out.println(new Date(getTimeStamp()*1000));
-//		System.out.println(getTimeStamp());
-//		System.out.println(new Date().getTime());
-//		System.out.println((long)getTimeStamp()*1000);
-		
-		System.out.println( getTimeStampToString(1387786977  ,"yyyy-MM-dd HH:mm:ss") );
-		System.out.println( getTimeStampToString(1387787563,"yyyy-MM-dd HH:mm:ss") );
-		
-		System.out.println( getCalendar().getTime() );
-		System.out.println( new Date() );
-//		String str = getTimeStampToString(1358006400,"yyyy-MM-dd");	
-//		System.out.println(DateTimeUtil.getWeekByDate(getTimeStampToDate(1366732800)));
-//		Date dateTemp = DateTimeUtil.getTimeStampToDate(1366732800);
-//		Date dateVar = DateTimeUtil.dateTimeAdd(dateTemp, 5, 0);
-//		System.out.println(DateTimeUtil.getWeekByDate(dateVar));
-//		
-//		Date dateVar1 = DateTimeUtil.dateTimeAdd(dateTemp, 5, 1);
-//		System.out.println(DateTimeUtil.getWeekByDate(dateVar1));
-//		System.out.println(DateTimeUtil.getWeekDay(str, "yyyy-MM-dd", ""));
-//		System.out.println(getStringToInt("2012-09-09","yyyy-MM-dd"));
-		
-		System.out.println(TimeZone.getDefault().getID());
+		for(int i=0;i<20;i++) {
+			System.out.println("UUIDHexGenerator :" +UUIDHexGenerator.generator() + "  randomUUID   " + UUID.randomUUID().toString().replace("-", ""));
+
+		}
 	}
 }
