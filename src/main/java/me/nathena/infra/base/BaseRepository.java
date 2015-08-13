@@ -574,4 +574,28 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	{
 		return value==null || ( PrimitiveTypeChecked.checkNumberType(field.getType()) && "0".equals(value.toString()) );
 	}
+
+	@Override
+	public List<T> load(List<SqlQuery> querys) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		String querySql = SqlQuery.toDynamicSql(tableName, querys, params);
+		return jdbc.getList(entityClass, querySql, params);
+	}
+
+	@Override
+	public List<T> load(List<SqlQuery> querys, int pageNo, int rowSize) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		String querySql = SqlQuery.toDynamicSql(tableName, querys, params);
+		querySql += " LIMIT :offset, :rowSize";
+		params.put("offset", (pageNo - 1) * rowSize);
+		params.put("rowSize", rowSize);
+		return jdbc.getList(entityClass, querySql, params);
+	}
+	
+	public int total(List<SqlQuery> querys) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		String querySql = SqlQuery.toCountSql(tableName, querys, params);
+		
+		return jdbc.queryForInt(querySql, params);
+	}
 }

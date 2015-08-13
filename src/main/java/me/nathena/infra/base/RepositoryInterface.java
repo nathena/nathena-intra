@@ -1,5 +1,7 @@
 package me.nathena.infra.base;
 
+import java.util.List;
+
 
 
 
@@ -65,4 +67,22 @@ public interface RepositoryInterface<T> {
 	 * @return T
 	 */
 	public T merge(T t);
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 获取</p> 
+	 * @param key
+	 * @return T
+	 */
+	public List<T> load(List<SqlQuery> querys);
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 获取</p> 
+	 * @param key
+	 * @return T
+	 */
+	public List<T> load(List<SqlQuery> querys, int pageNo, int rowSize);
+	
+	public int total(List<SqlQuery> querys);
 }
