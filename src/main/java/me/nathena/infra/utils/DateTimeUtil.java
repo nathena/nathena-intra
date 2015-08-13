@@ -83,12 +83,7 @@ public final class DateTimeUtil
 
 		return DateFormatUtils.format(c, format, tz, Locale.US);
 	}
-	/**
-	 * @说明 得到格式为 format 的日期Str
-	 * @param date 日期
-	 * @param format 转化格式
-	 * @return String
-	 */
+
 	public static String getDateToStr(String dateStr,String format1,String format2)
 	{
 		String strDate = "";
