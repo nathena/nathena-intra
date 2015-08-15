@@ -739,6 +739,24 @@ public final class DateTimeUtil
 		return new Date(calendar.getTimeInMillis());
 	}
 
+	public static Date getNextday(long mills){
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(mills);
+		calendar.add(Calendar.DATE, 1);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return new Date(calendar.getTimeInMillis());
+	}
+
+	public static String getNextDayString(Date time, String format){
+		Date date = getNextday(time.getTime());
+		return getDateToStr(date, format);
+	}
+
+
+
 	/**
 	 * @param args
 	 */
