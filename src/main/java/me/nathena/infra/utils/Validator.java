@@ -27,7 +27,8 @@ public final class Validator {
 	public static final String phone = "^(\\d|-){0,30}$";
 	//Mobile
 //    private static final String mobile = "^((\\d{2,3})|(\\d{3}\\-))?1(3|5|8)\\d{9}$";
-    private static final String mobile = "^((13[0-9])|(15[^4,\\D])|(18[0,5-9]))\\d{8}$";
+//    private static final String mobile = "^((13[0-9])|(15[^4,\\D])|(18[0,5-9]))\\d{8}$";
+	private static final String mobile = "^((13)|(15)|(18)|(17)|(14))\\d{9}$";//只验证前两位
 	//Email域模式
 	public static final String DOMAINEND = "^\\w+([-_\\.]\\w+)*\\.\\w+([-_\\.]\\w+)*$";
 	
