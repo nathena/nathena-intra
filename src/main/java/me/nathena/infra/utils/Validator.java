@@ -28,7 +28,7 @@ public final class Validator {
 	//Mobile
 //    private static final String mobile = "^((\\d{2,3})|(\\d{3}\\-))?1(3|5|8)\\d{9}$";
 //    private static final String mobile = "^((13[0-9])|(15[^4,\\D])|(18[0,5-9]))\\d{8}$";
-	private static final String mobile = "^((13)|(15)|(18)|(17)|(14))\\d{9}$";//只验证前两位
+	private static final String mobile = "^1(3|5|8|4|7)\\d{9}$";//只验证前两位
 	//Email域模式
 	public static final String DOMAINEND = "^\\w+([-_\\.]\\w+)*\\.\\w+([-_\\.]\\w+)*$";
 	
@@ -195,6 +195,6 @@ public final class Validator {
 		String test = "196.2.22.255";
 		System.out.println(isIpv4(test));
 		
-		System.out.println(isMobile("12142352352u4523"));
+		System.out.println(isMobile("14759167637"));
 	}	
 }
