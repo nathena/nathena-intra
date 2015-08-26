@@ -82,7 +82,7 @@ public class SqlQuery {
 		this.value2 = value2;
 	}
 	public static final String eq = "=", gt = ">", gte = ">=", lt = "<", lte = "<=",
-							   in = "IN", between_and = "bt", like = "LIKE", like_left = "LIKE_LEFT", like_right = "LIKE_RIGHT";
+							   in = "IN", between_and = "bt", like = "LIKE";
 	public String toSearchSql(Map<String, Object> paramMap) {
 		if(StringUtils.isEmpty(opr)) {
 			return "";
@@ -98,13 +98,7 @@ public class SqlQuery {
 			paramMap.put(column + r + "2", value2);
 			return new StringBuffer(" ").append(connect).append(" ").append(column).append(" BETWEEN :").append(column).append(r).append("1").append(" AND :").append(column).append(r).append("2").toString();
 		case like:
-			paramMap.put(column + r, "%" + value + "%");
-			return new StringBuffer(" ").append(connect).append(" ").append(column).append(" LIKE :").append(column).append(r).toString();
-		case like_left:
-			paramMap.put(column + r, "%" + value);
-			return new StringBuffer(" ").append(connect).append(" ").append(column).append(" LIKE :").append(column).append(r).toString();
-		case like_right:
-			paramMap.put(column + r, value + "%");
+			paramMap.put(column + r, value);
 			return new StringBuffer(" ").append(connect).append(" ").append(column).append(" LIKE :").append(column).append(r).toString();
 		default:
 			paramMap.put(column + r, value);
