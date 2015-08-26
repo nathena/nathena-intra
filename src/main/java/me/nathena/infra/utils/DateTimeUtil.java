@@ -751,6 +751,8 @@ public final class DateTimeUtil
 	}
 
 	public static String getNextDayString(Date time, String format){
+		if(time == null)
+			return "";
 		Date date = getNextday(time.getTime());
 		return getDateToStr(date, format);
 	}
