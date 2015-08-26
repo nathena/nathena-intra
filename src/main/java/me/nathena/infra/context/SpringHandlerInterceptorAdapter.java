@@ -18,8 +18,6 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 		request.setCharacterEncoding("UTF-8");
 		response.setCharacterEncoding("UTF-8");
 		
-		AppsContext.initRequestContext(request, response);
-		
 		if( handler instanceof HandlerMethod)
 		{
 			HandlerMethod handlerMethod = (HandlerMethod)handler;
@@ -51,8 +49,6 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 	@Override
 	public void afterCompletion(HttpServletRequest request,HttpServletResponse response, Object handler, Exception ex)
 			throws Exception {
-		
-		AppsContext.destoryRequestContext();
 		
 		if( handler instanceof HandlerMethod)
 		{
