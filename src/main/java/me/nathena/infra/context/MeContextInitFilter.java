@@ -29,13 +29,14 @@ public class MeContextInitFilter implements Filter{
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
-		if(request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-			AppsContext.initRequestContext((HttpServletRequest)request, (HttpServletResponse)response);
-		}
-				
-		chain.doFilter(request, response);
 		
-		if(request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+		try
+		{
+			AppsContext.initRequestContext((HttpServletRequest)request, (HttpServletResponse)response);
+			chain.doFilter(request, response);
+		}
+		finally
+		{
 			AppsContext.destoryRequestContext();
 		}
 	}
