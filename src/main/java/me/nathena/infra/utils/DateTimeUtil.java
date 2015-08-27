@@ -750,6 +750,17 @@ public final class DateTimeUtil
 		return new Date(calendar.getTimeInMillis());
 	}
 
+	public static Date getDaysLater(long mills, int day){
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(mills);
+		calendar.add(Calendar.DATE, day);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return new Date(calendar.getTimeInMillis());
+	}
+
 	public static String getNextDayString(Date time, String format){
 		if(time == null)
 			return "";
