@@ -572,7 +572,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	
 	private static boolean isTransientValue(Field field,Object value)
 	{
-		return value==null || ( PrimitiveTypeChecked.checkNumberType(field.getType()) && "0".equals(value.toString()) );
+		return value==null || ( PrimitiveTypeChecked.checkNumberType(field.getType()) && ("0".equals(value.toString()) || "0.0".equals(value.toString())) );
 	}
 
 	@Override
