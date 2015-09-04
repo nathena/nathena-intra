@@ -5,6 +5,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import me.nathena.infra.base.BaseControl;
 import me.nathena.infra.base.MustLoginedInterface;
+import me.nathena.infra.base.RequestParamValidateController;
+import me.nathena.infra.base.RequestValidate;
 
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -23,14 +25,18 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 			HandlerMethod handlerMethod = (HandlerMethod)handler;
 			Object bean = handlerMethod.getBean();
 			
+			if(bean instanceof RequestParamValidateController)
+			{
+				RequestParamValidateController obj = (RequestParamValidateController)bean;
+				RequestValidate validates = handlerMethod.getMethodAnnotation(RequestValidate.class);
+				if(!obj.validate(request, response, validates)) {
+					return false;
+				}
+			}
+			
 			if(bean instanceof BaseControl)
 			{
 				BaseControl obj = (BaseControl)bean;
-				
-				RequestValidate validates = handlerMethod.getMethodAnnotation(RequestValidate.class);
-				if(validates != null && !obj.paramValidate(request, response, validates)) {
-					return false;
-				}
 				
 				if( !obj.preHandle(request, response) )
 				{
@@ -51,7 +57,6 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 		return super.preHandle(request, response, handler);
 	}
 
-	
 	@Override
 	public void afterCompletion(HttpServletRequest request,HttpServletResponse response, Object handler, Exception ex)
 			throws Exception {

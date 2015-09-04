@@ -1,7 +1,7 @@
 /**
  * 
  */
-package me.nathena.infra.context;
+package me.nathena.infra.base;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,6 +19,7 @@ import me.nathena.infra.utils.Validator;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequestValidate {
 	String[] fileds() default {};
+	String failedView() default "";
 	
 	public static final class RequestValidateRule {
 		private static final List<String> RULES = Arrays.asList(new String[]{"REQUIRED", "MOBILE", "INTEGER", "DOUBLE"});
