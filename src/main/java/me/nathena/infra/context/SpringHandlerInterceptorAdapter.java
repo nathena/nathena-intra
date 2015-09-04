@@ -26,6 +26,12 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 			if(bean instanceof BaseControl)
 			{
 				BaseControl obj = (BaseControl)bean;
+				
+				RequestValidate validates = handlerMethod.getMethodAnnotation(RequestValidate.class);
+				if(validates != null && !obj.paramValidate(request, response, validates)) {
+					return false;
+				}
+				
 				if( !obj.preHandle(request, response) )
 				{
 					return false;

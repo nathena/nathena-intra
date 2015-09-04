@@ -226,12 +226,13 @@ public final class DateTimeUtil
 
 	/**
 	 * @说明 返回系统时间月份
+	 * 2015-8-31 Gaowx 系统时间比实际月数少一个月
 	 * @return int
 	 */
 	public static int getMonth() 
 	{
 		Calendar calendar = getCalendar();
-		return calendar.get(Calendar.MONTH);
+		return calendar.get(Calendar.MONTH) + 1;
 	}
 
 	/**

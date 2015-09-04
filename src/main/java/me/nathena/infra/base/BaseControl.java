@@ -7,12 +7,18 @@ import javax.servlet.http.HttpServletResponse;
 
 import me.nathena.infra.context.AppsContext;
 import me.nathena.infra.context.RequestContext;
+import me.nathena.infra.context.RequestValidate;
 import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.NumberUtil;
 
 public abstract class BaseControl {
 	
 	public boolean preHandle(HttpServletRequest request,HttpServletResponse response)
+	{
+		return true;
+	}
+	
+	public boolean paramValidate(HttpServletRequest request, HttpServletResponse response, RequestValidate validates)
 	{
 		return true;
 	}
