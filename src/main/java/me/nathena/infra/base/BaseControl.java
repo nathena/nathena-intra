@@ -1,9 +1,7 @@
 package me.nathena.infra.base;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -11,9 +9,8 @@ import me.nathena.infra.context.AppsContext;
 import me.nathena.infra.context.RequestContext;
 import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.NumberUtil;
-import me.nathena.infra.utils.StringUtil;
 
-public abstract class BaseControl implements RequestParamValidateController {
+public abstract class BaseControl {
 	
 	public boolean preHandle(HttpServletRequest request,HttpServletResponse response)
 	{
@@ -23,56 +20,6 @@ public abstract class BaseControl implements RequestParamValidateController {
 	public boolean afterCompletion(HttpServletRequest request,HttpServletResponse response)
 	{
 		return true;
-	}
-	
-	/**
-	 * 统一参数验证处理
-	 */
-	public boolean validate(HttpServletRequest request,HttpServletResponse response, RequestValidate validates) {
-		if(validates != null && validates.fileds() != null) {
-			for(String filed : validates.fileds()) {
-				String[] filedParts = filed.split(";");
-				if(filedParts.length < 2) {
-					continue;
-				}
-				String filedName = filedParts[0];
-				String rules = filedParts[1];
-				String msg = filedParts.length > 2 ? filedParts[2] : "参数错误";
-				
-				String parameterValue = request.getParameter(filedName);
-
-				for(String rule : rules.split(",")) {
-					if(!RequestValidate.RequestValidateRule.validate(rule, parameterValue)) {
-						LogHelper.info("\n 参数验证失败:" + filedName + ",要求:" + rules + ",实际:" + parameterValue);
-						String failedTargetView = StringUtil.isEmpty(validates.failedView()) ? "/" : validates.failedView();//跳转失败页面
-						paramValidateFailResponse(request, response, failedTargetView, msg);
-						return false;
-					}
-				}
-			}
-		}
-		
-		return true;
-	}
-	
-	/**
-	 * 参数验证失败默认处理,具体业务可以覆盖改方法,根据具体业务返回信息
-	 * @param request
-	 * @param response
-	 * @param validates
-	 * @param msg
-	 */
-	protected void paramValidateFailResponse(HttpServletRequest request, HttpServletResponse response, String failedTargetView, String msg) {
-		if(isAjaxRequest(request)) {
-			toResponse(msg);
-		} else {
-			try {
-				request.setAttribute("errMsg", msg);
-				request.getRequestDispatcher(failedTargetView).forward(request, response);
-			} catch (ServletException | IOException e) {
-				LogHelper.error("\n 跳转异常", e);
-			}
-		}
 	}
 	
 	public void toResponse(Object content)
