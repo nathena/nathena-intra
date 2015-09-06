@@ -16,9 +16,9 @@ import me.nathena.infra.utils.StringUtil;
 import me.nathena.infra.utils.Validator;
 
 public class RequestValidator {
-	private static final List<String> RULES = Arrays.asList(
+	public static final List<String> RULES = Arrays.asList(
 			new String[]{"REQUIRED", "MOBILE", "INTEGER", "DOUBLE", "EQUAL"});
-	private static final List<String> SECOND_RULES = Arrays.asList(
+	public static final List<String> SECOND_RULES = Arrays.asList(
 			new String[]{"MAX", "MIN", "PARAM", "CONSTANT"});
 	
 	private static final int INDEX_PARAM = 0, INDEX_RULE = 1, INDEX_VALUE = 2;
