@@ -29,7 +29,7 @@ public class RequestValidator {
 	public static boolean isPass(String errMsg) {
 		return StringUtil.isEmpty(errMsg);
 	}
-	//参数验证失败时返回的默认实现,可实现RequestValidateResponse接口自定义返回
+	//参数验证失败时返回的默认实现,controller可实现RequestValidateResponse接口自定义返回
 	//默认采用rest风格以http状态码表征请求错误
 	public static final void defaultResponse(HttpServletRequest request, HttpServletResponse response, 
 			String failedTargetView, String msg) {
