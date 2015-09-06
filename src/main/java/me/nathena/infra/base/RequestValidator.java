@@ -1,9 +1,15 @@
 package me.nathena.infra.base;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpStatus;
 
 import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.StringUtil;
@@ -22,6 +28,29 @@ public class RequestValidator {
 	//判断是否通过
 	public static boolean isPass(String errMsg) {
 		return StringUtil.isEmpty(errMsg);
+	}
+	//参数验证失败时返回的默认实现,可实现RequestValidateResponse接口自定义返回
+	//默认采用rest风格以http状态码表征请求错误
+	public static final void defaultResponse(HttpServletRequest request, HttpServletResponse response, 
+			String failedTargetView, String msg) {
+		PrintWriter writer = null;
+		try {
+			if(StringUtil.isEmpty(failedTargetView)) {
+				response.setStatus(HttpStatus.BAD_REQUEST.value());
+				writer = response.getWriter();
+				writer.write(msg);
+				writer.flush();
+			} else {
+				request.setAttribute("errMsg", msg);
+				request.getRequestDispatcher(failedTargetView).forward(request, response);
+			}			
+		} catch (ServletException | IOException e) {
+			LogHelper.error("跳转时错误", e);
+		} finally {
+			if(writer != null) {
+				writer.close();
+			}
+		}
 	}
 	//获取返回的错误描述
 	public static final String getErrorMsg(HttpServletRequest request, RequestValidate validates) {
@@ -75,7 +104,7 @@ public class RequestValidator {
 		case "EQUAL":
 			if(rules.length != 3) {
 				LogHelper.warn("\n 参数验证规则书写有误 rule :" + rule);
-				return false;
+				return true;
 			}
 			String compareValue = "PARAM".equals(rules[INDEX_SECOND_RULE]) ? rules[INDEX_SECOND_REQUIRED]
 					: request.getParameter(rules[INDEX_SECOND_REQUIRED]);
