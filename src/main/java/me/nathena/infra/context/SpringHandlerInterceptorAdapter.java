@@ -73,7 +73,7 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 		PrintWriter writer = null;
 		try {
 			if(StringUtil.isEmpty(failedTargetView)) {
-				response.setStatus(HttpStatus.BAD_GATEWAY.value());
+				response.setStatus(HttpStatus.BAD_REQUEST.value());
 				writer = response.getWriter();
 				writer.write(msg);
 				writer.flush();
