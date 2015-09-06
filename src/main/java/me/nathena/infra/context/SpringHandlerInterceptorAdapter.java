@@ -1,5 +1,9 @@
 package me.nathena.infra.context;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -8,7 +12,10 @@ import me.nathena.infra.base.MustLoginedInterface;
 import me.nathena.infra.base.RequestValidate;
 import me.nathena.infra.base.RequestValidateResponse;
 import me.nathena.infra.base.RequestValidator;
+import me.nathena.infra.utils.LogHelper;
+import me.nathena.infra.utils.StringUtil;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -33,8 +40,8 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 					if(bean instanceof RequestValidateResponse) {
 						((RequestValidateResponse)bean).validateResponse(request, response, 
 								validates.failedView(), errMsg);
-					} else {//TODO 否则默认返回处理
-						
+					} else {
+						defaultValidateResponse(request, response, validates.failedView(), errMsg);
 					}
 					return false;
 				}
@@ -58,7 +65,31 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 		
 		return super.preHandle(request, response, handler);
 	}
-
+	
+	//参数验证失败时返回的默认实现,可实现RequestValidateResponse接口自定义返回
+	//默认采用rest风格以http状态码表征请求错误
+	private void defaultValidateResponse(HttpServletRequest request, HttpServletResponse response, 
+			String failedTargetView, String msg) {
+		PrintWriter writer = null;
+		try {
+			if(StringUtil.isEmpty(failedTargetView)) {
+				response.setStatus(HttpStatus.BAD_GATEWAY.value());
+				writer = response.getWriter();
+				writer.write(msg);
+				writer.flush();
+			} else {
+				request.setAttribute("errMsg", msg);
+				request.getRequestDispatcher(failedTargetView).forward(request, response);
+			}			
+		} catch (ServletException | IOException e) {
+			LogHelper.error("跳转时错误", e);
+		} finally {
+			if(writer != null) {
+				writer.close();
+			}
+		}
+	}
+	
 	@Override
 	public void afterCompletion(HttpServletRequest request,HttpServletResponse response, 
 			Object handler, Exception ex) throws Exception {
