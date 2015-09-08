@@ -1,6 +1,7 @@
 package me.nathena.infra.utils;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**  
  * @Title: CollectionUtil.java
@@ -19,6 +20,10 @@ public class CollectionUtil {
 	
 	public static boolean isEmpty(Object[] objs) {
 		return (objs == null || objs.length == 0);
+	}
+	
+	public static boolean isEmpty(Map map) {
+		return (map == null || CollectionUtil.isEmpty(map.keySet()));
 	}
 	
 	public static boolean isLengthEqual(Collection<?> col1, Collection<?> col2) {

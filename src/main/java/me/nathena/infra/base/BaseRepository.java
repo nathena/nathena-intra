@@ -14,6 +14,8 @@ import javax.annotation.Resource;
 import javax.persistence.Column;
 import javax.persistence.Id;
 
+import me.nathena.infra.utils.CollectionUtil;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
 
@@ -597,5 +599,85 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		String querySql = SqlQuery.toCountSql(tableName, querys, params);
 		
 		return jdbc.queryForInt(querySql, params);
+	}
+
+	@Override
+	public List<T> load(RepositoryFilter filter) {
+		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
+		
+		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			return jdbc.getList(entityClass, sql.toString());
+		}
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+
+		for(SqlQuery query : filter.toSqlQuerys()) {
+			sql.append(query.toSearchSql(params));
+		}
+		
+		sql.append(filter.toOrders());
+		
+		return jdbc.getList(entityClass, sql.toString(), params);
+	}
+
+	@Override
+	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize) {
+		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
+		
+		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			return jdbc.getList(entityClass, sql.toString());
+		}
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+
+		for(SqlQuery query : filter.toSqlQuerys()) {
+			sql.append(query.toSearchSql(params));
+		}
+		
+		sql.append(filter.toOrders());
+		
+		sql.append(" LIMIT :rowOffset, :rowSize");
+		params.put("rowOffset", (pageNo - 1) * rowSize);
+		params.put("rowSize", rowSize);
+		
+		return jdbc.getList(entityClass, sql.toString(), params);
+	}
+
+	@Override
+	public List<T> load(RepositoryFilter filter, int limit) {
+		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
+		
+		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			return jdbc.getList(entityClass, sql.toString());
+		}
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+
+		for(SqlQuery query : filter.toSqlQuerys()) {
+			sql.append(query.toSearchSql(params));
+		}
+		
+		sql.append(filter.toOrders());
+		
+		sql.append(" LIMIT :limit");
+		params.put("limit", limit);
+		
+		return jdbc.getList(entityClass, sql.toString(), params);
+	}
+
+	@Override
+	public int count(RepositoryFilter filter) {
+		StringBuffer sql = new StringBuffer("SELECT count(1) FROM `").append(tableName).append("` WHERE 1");
+		
+		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			return jdbc.queryForInt(sql.toString());
+		}
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+
+		for(SqlQuery query : filter.toSqlQuerys()) {
+			sql.append(query.toSearchSql(params));
+		}
+		return jdbc.queryForInt(sql.toString(), params);
 	}
 }

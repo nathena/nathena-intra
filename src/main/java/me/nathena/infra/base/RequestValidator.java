@@ -94,7 +94,7 @@ public class RequestValidator {
 		
 		switch(rules[INDEX_FIRST_RULE]) {
 		case "REQUIRED":
-			return requiredRule(value);
+			return requiredRule(rules, value);
 		case "MOBILE":
 			return mobileRule(value);
 		case "INTEGER":
@@ -115,8 +115,24 @@ public class RequestValidator {
 		}
 	}
 	
-	private static boolean requiredRule(String value) {
-		return !StringUtil.isEmpty(value);
+	private static boolean requiredRule(String[] rules, String value) {
+		if(StringUtil.isEmpty(value)) {
+			return false;
+		}
+		
+		if(rules.length == 3) {
+			switch(rules[INDEX_SECOND_RULE]) {
+			case "MAX":
+				return  value.length() <= Integer.valueOf(rules[INDEX_SECOND_REQUIRED]);
+			case "MIN":
+				return  value.length() >= Integer.valueOf(rules[INDEX_SECOND_REQUIRED]);
+			default:
+				LogHelper.warn("\n 参数验证规则书写有误 INDEX_SECOND_RULE :" + rules[INDEX_SECOND_RULE]);
+				return true;
+			}
+		}
+		
+		return true;
 	}
 	
 	private static boolean mobileRule(String value) {
