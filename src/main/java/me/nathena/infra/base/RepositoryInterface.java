@@ -74,30 +74,6 @@ public interface RepositoryInterface<T> {
 	 * @param key
 	 * @return T
 	 */
-	public List<T> load(List<SqlQuery> querys);
-	/**
-	 * 
-	 * <p>Title: load</p> 
-	 * <p>Description: 获取</p> 
-	 * @param key
-	 * @return T
-	 */
-	public List<T> load(List<SqlQuery> querys, int pageNo, int rowSize);
-	/**
-	 * 
-	 * <p>Title: total</p> 
-	 * <p>Description: 总数</p> 
-	 * @param key
-	 * @return T
-	 */
-	public int total(List<SqlQuery> querys);
-	/**
-	 * 
-	 * <p>Title: load</p> 
-	 * <p>Description: 获取</p> 
-	 * @param key
-	 * @return T
-	 */
 	public List<T> load(RepositoryFilter filter);
 	/**
 	 * 
