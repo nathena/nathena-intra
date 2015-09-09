@@ -3,6 +3,7 @@
  */
 package me.nathena.infra.base;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -14,6 +15,12 @@ import java.util.List;
  *
  */
 public abstract class RepositoryFilter {
-	public abstract List<SqlQuery> toSqlQuerys();
+	//TODO 延迟初始化?
+	protected List<SqlQuery> sqlQueries = new ArrayList<SqlQuery>();
+	
+	public List<SqlQuery> toSqlQuerys() {
+		return sqlQueries;
+	}
+	
 	public String toOrders() {return "";}
 }

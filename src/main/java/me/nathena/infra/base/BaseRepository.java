@@ -581,17 +581,17 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public List<T> load(RepositoryFilter filter) {
 		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
 		
-		if(filter == null || !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			return jdbc.getList(entityClass, sql.toString());
-		}
-		
 		Map<String, Object> params = new HashMap<String, Object>();
-
-		for(SqlQuery query : filter.toSqlQuerys()) {
-			sql.append(query.toSearchSql(params));
+		
+		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			for(SqlQuery query : filter.toSqlQuerys()) {
+				sql.append(query.toSearchSql(params));
+			}
+			
+			sql.append(filter.toOrders());
 		}
 		
-		sql.append(filter.toOrders());
+		
 		
 		return jdbc.getList(entityClass, sql.toString(), params);
 	}
@@ -599,6 +599,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize) {
 		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
+		
 		Map<String, Object> params = new HashMap<String, Object>();
 		
 		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
