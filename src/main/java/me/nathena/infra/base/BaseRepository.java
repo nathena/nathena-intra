@@ -581,7 +581,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public List<T> load(RepositoryFilter filter) {
 		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
 		
-		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+		if(filter == null || !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
 			return jdbc.getList(entityClass, sql.toString());
 		}
 		
@@ -599,19 +599,16 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize) {
 		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
-		
-		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			return jdbc.getList(entityClass, sql.toString());
-		}
-		
 		Map<String, Object> params = new HashMap<String, Object>();
-
-		for(SqlQuery query : filter.toSqlQuerys()) {
-			sql.append(query.toSearchSql(params));
+		
+		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			for(SqlQuery query : filter.toSqlQuerys()) {
+				sql.append(query.toSearchSql(params));
+			}
+			
+			sql.append(filter.toOrders());
 		}
-		
-		sql.append(filter.toOrders());
-		
+
 		sql.append(" LIMIT :rowOffset, :rowSize");
 		params.put("rowOffset", (pageNo - 1) * rowSize);
 		params.put("rowSize", rowSize);
@@ -623,17 +620,15 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public List<T> load(RepositoryFilter filter, int limit) {
 		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
 		
-		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			return jdbc.getList(entityClass, sql.toString());
-		}
-		
 		Map<String, Object> params = new HashMap<String, Object>();
-
-		for(SqlQuery query : filter.toSqlQuerys()) {
-			sql.append(query.toSearchSql(params));
-		}
 		
-		sql.append(filter.toOrders());
+		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			for(SqlQuery query : filter.toSqlQuerys()) {
+				sql.append(query.toSearchSql(params));
+			}
+			
+			sql.append(filter.toOrders());
+		}
 		
 		sql.append(" LIMIT :limit");
 		params.put("limit", limit);
@@ -645,7 +640,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public int count(RepositoryFilter filter) {
 		StringBuffer sql = new StringBuffer("SELECT count(1) FROM `").append(tableName).append("` WHERE 1");
 		
-		if(filter == null || CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+		if(filter == null || !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
 			return jdbc.queryForInt(sql.toString());
 		}
 		
@@ -655,5 +650,40 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			sql.append(query.toSearchSql(params));
 		}
 		return jdbc.queryForInt(sql.toString(), params);
+	}
+
+	@Override
+	public T get(RepositoryFilter filter, String... requiredFields) {
+		StringBuffer sql = new StringBuffer("SELECT ");
+		if(requiredFields == null) {
+			sql.append("*");
+		} else {
+			Iterator<Field> fieldIter = fields.iterator();
+			String split = "";
+			for(String fieldStr : requiredFields) {
+				//TODO 这里的实现导致O(N2)的复杂度 待优化(HashMap?)
+				while(fieldIter.hasNext()) {
+					Field filed = fieldIter.next();
+					if(filed.getName().equals(fieldStr)) {
+						String name = EntitySpecification.getName(filed);
+						sql.append(split).append("`").append(name).append("` ");
+						split = ",";
+					}
+				}
+			}
+		}
+		
+		sql.append(" FROM `").append(tableName).append("` WHERE 1");
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+		
+		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
+			for(SqlQuery query : filter.toSqlQuerys()) {
+				sql.append(query.toSearchSql(params));
+			}
+		}
+		
+		sql.append(" LIMIT 1");
+		return jdbc.getEntity(entityClass, sql.toString(), params);
 	}
 }

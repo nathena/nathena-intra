@@ -62,11 +62,20 @@ public interface RepositoryInterface<T> {
 	/**
 	 * 
 	 * <p>Title: get</p> 
-	 * <p>Description: 获取</p> 
+	 * <p>Description: 插入或更新</p> 
 	 * @param key
 	 * @return T
 	 */
 	public T merge(T t);
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 根据搜索条件获取,</p> 
+	 * @param filter 搜索条件
+	 * @param requiredFields 本次查询需要的属性名称,该参数在数据来源是数据库时可以优化性能
+	 * @return T
+	 */
+	public T get(RepositoryFilter filter, String... requiredFields);
 	/**
 	 * 
 	 * <p>Title: load</p> 
