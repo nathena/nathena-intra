@@ -583,15 +583,17 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		
 		Map<String, Object> params = new HashMap<String, Object>();
 		
-		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			for(SqlQuery query : filter.toSqlQuerys()) {
-				sql.append(query.toSearchSql(params));
-			}
+		if(filter != null) {
+			List<SqlQuery> querys = filter.toSqlQuerys();
 			
-			sql.append(filter.toOrders());
+			if(!CollectionUtil.isEmpty(querys)) {
+				for(SqlQuery query : querys) {
+					sql.append(query.toSearchSql(params));
+				}
+				
+				sql.append(filter.toOrders());
+			}
 		}
-		
-		
 		
 		return jdbc.getList(entityClass, sql.toString(), params);
 	}
@@ -602,13 +604,18 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		
 		Map<String, Object> params = new HashMap<String, Object>();
 		
-		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			for(SqlQuery query : filter.toSqlQuerys()) {
-				sql.append(query.toSearchSql(params));
-			}
+		if(filter != null) {
+			List<SqlQuery> querys = filter.toSqlQuerys();
 			
-			sql.append(filter.toOrders());
+			if(!CollectionUtil.isEmpty(querys)) {
+				for(SqlQuery query : querys) {
+					sql.append(query.toSearchSql(params));
+				}
+				
+				sql.append(filter.toOrders());
+			}
 		}
+
 
 		sql.append(" LIMIT :rowOffset, :rowSize");
 		params.put("rowOffset", (pageNo - 1) * rowSize);
@@ -623,12 +630,16 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		
 		Map<String, Object> params = new HashMap<String, Object>();
 		
-		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			for(SqlQuery query : filter.toSqlQuerys()) {
-				sql.append(query.toSearchSql(params));
-			}
+		if(filter != null) {
+			List<SqlQuery> querys = filter.toSqlQuerys();
 			
-			sql.append(filter.toOrders());
+			if(!CollectionUtil.isEmpty(querys)) {
+				for(SqlQuery query : querys) {
+					sql.append(query.toSearchSql(params));
+				}
+				
+				sql.append(filter.toOrders());
+			}
 		}
 		
 		sql.append(" LIMIT :limit");
@@ -647,9 +658,16 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		
 		Map<String, Object> params = new HashMap<String, Object>();
 
-		for(SqlQuery query : filter.toSqlQuerys()) {
-			sql.append(query.toSearchSql(params));
+		if(filter != null) {
+			List<SqlQuery> querys = filter.toSqlQuerys();
+			
+			if(!CollectionUtil.isEmpty(querys)) {
+				for(SqlQuery query : querys) {
+					sql.append(query.toSearchSql(params));
+				}
+			}
 		}
+		
 		return jdbc.queryForInt(sql.toString(), params);
 	}
 
@@ -677,10 +695,13 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		sql.append(" FROM `").append(tableName).append("` WHERE 1");
 		
 		Map<String, Object> params = new HashMap<String, Object>();
-		
-		if(filter != null && !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			for(SqlQuery query : filter.toSqlQuerys()) {
-				sql.append(query.toSearchSql(params));
+		if(filter != null) {
+			List<SqlQuery> querys = filter.toSqlQuerys();
+			
+			if(!CollectionUtil.isEmpty(querys)) {
+				for(SqlQuery query : querys) {
+					sql.append(query.toSearchSql(params));
+				}
 			}
 		}
 		

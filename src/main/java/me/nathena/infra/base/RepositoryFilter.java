@@ -16,10 +16,14 @@ import java.util.List;
  */
 public abstract class RepositoryFilter {
 	//TODO 延迟初始化?
-	protected List<SqlQuery> sqlQueries = new ArrayList<SqlQuery>();
+	protected List<SqlQuery> sqlQueries;
+	
+	public RepositoryFilter() {
+		sqlQueries = new ArrayList<SqlQuery>();
+	}
 	
 	public List<SqlQuery> toSqlQuerys() {
-		return sqlQueries;
+		return null;
 	}
 	
 	public String toOrders() {return "";}
