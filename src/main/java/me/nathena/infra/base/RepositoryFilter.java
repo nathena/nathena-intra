@@ -15,7 +15,14 @@ import java.util.List;
  *
  */
 public abstract class RepositoryFilter {
-	//TODO 延迟初始化?
+	public static enum QueryType {
+		SQL,//来自数据库,
+	}
+	protected QueryType queryType = QueryType.SQL;
+	public QueryType getQueryType() {
+		return queryType;
+	}
+	
 	protected List<SqlQuery> sqlQueries;
 	
 	public RepositoryFilter() {
