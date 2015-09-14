@@ -576,7 +576,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public T get(RepositoryFilter filter) {
 		try {
-			StringBuffer sql = new StringBuffer("SELECT * FROM ");
+			StringBuffer sql = new StringBuffer("SELECT * FROM `");
 			
 			sql.append(tableName).append("` WHERE 1");
 			
