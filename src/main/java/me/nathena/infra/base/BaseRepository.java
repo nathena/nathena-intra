@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -15,13 +16,20 @@ import javax.persistence.Column;
 import javax.persistence.Id;
 
 import me.nathena.infra.utils.CollectionUtil;
+import me.nathena.infra.utils.LogHelper;
+import me.nathena.infra.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.Cacheable;
 
 @Cacheable(value="jytnn.cache")
 public abstract class BaseRepository<T> implements RepositoryInterface<T> {
-
+	public static enum QueryType {
+		SQL,
+	}
+	//默认数据源为关系型数据库
+	protected QueryType queryType = QueryType.SQL;
+	
 	@Resource
 	protected JdbcGeneralRepository jdbc;
 	
@@ -29,8 +37,10 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	
 	protected String tableName;
 	
-	protected Set<Field> ids;
-	protected Set<Field> fields;
+	protected Map<String, Method> fieldToMethodMap = new HashMap<String, Method>();
+	protected Map<String, String> fieldToColumnMap = new HashMap<String, String>();
+	protected Set<String> idFields = new HashSet<String>();
+	protected Set<String> transientFields = new HashSet<String>();
 	
 	@SuppressWarnings("unchecked")
 	public BaseRepository()
@@ -40,8 +50,26 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		
 		Map<Class<?>,Set<Field>> accessor = EntitySpecification.getAllAccessor(entityClass);
 		
-		this.ids = accessor.get(Id.class);
-		this.fields = accessor.get(Column.class);
+		Set<Field> ids = accessor.get(Id.class);
+		Set<Field> fields = accessor.get(Column.class);
+		
+		if(!CollectionUtil.isEmpty(ids)) {
+			for(Field f : ids) {
+				idFields.add(f.getName());
+				fieldToMethodMap.put(f.getName(), EntitySpecification.getReadMethod(f));
+				fieldToColumnMap.put(f.getName(), EntitySpecification.getName(f));
+			}
+		}
+		
+		if(!CollectionUtil.isEmpty(fields)) {
+			for(Field f : fields) {
+				if(PrimitiveTypeChecked.checkNumberType(f.getType())) {
+					transientFields.add(f.getName());
+				}
+				fieldToMethodMap.put(f.getName(), EntitySpecification.getReadMethod(f));
+				fieldToColumnMap.put(f.getName(), EntitySpecification.getName(f));
+			}
+		}
 	}
 
 	/**
@@ -52,61 +80,51 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	 * @return 
 	 * @see com.e344.springext.repository.RepositoryInterface#create(java.lang.Object)
 	 */
-	public T create(T t) 
-	{
-		try
-		{
+	public T create(T t) {
+		try {
 			boolean autoKey = true;
 			
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
 			StringBuilder sb = new StringBuilder(" insert into `");
-			sb.append(tableName);
-			sb.append("` ( ");
-			String sp="";
+			sb.append(tableName).append("` ( ");
+			String splite="";
 			
 			StringBuilder values = new StringBuilder();
 			
-			Field field = null;
-			String name = null;
-			Method method = null;
 			Object val = null;
-			Iterator<Field> fieldIter = fields.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+			Iterator<String> fieldIter = fieldToColumnMap.keySet().iterator();
+			while(fieldIter.hasNext()) {
+				String field = fieldIter.next();
+				String column = fieldToColumnMap.get(field);
+				Method method = fieldToMethodMap.get(field);
 				val = method.invoke(t);
 				
-				if(!isTransientValue(field,val))
-				{
-					sb.append(sp).append("`").append(name).append("`");
-					//sb.append(sp).append(name);
-					values.append(sp).append(":"+name);
-					paramMap.put(name, val);
+				if(!isTransientValue(field,val)) {
+					sb.append(splite).append("`").append(column).append("`");
+					values.append(splite).append(":"+field);
+					paramMap.put(field, val);
 					
-					sp=" , ";
+					splite=" , ";
 					
-					if( ids.contains(field)){
+					if(idFields.contains(field)){
 						autoKey = false;
 					}
 				}
 			}
 			sb.append(") values ( ").append(values).append(" ) ");
 			
-			if( jdbc.commandUpdate(sb.toString(),paramMap)>0 && ids.size() == 1 && autoKey ) 
-			{
-				field = ids.iterator().next();
-				method = EntitySpecification.getWriteMethod(field);
+			if(jdbc.commandUpdate(sb.toString(),paramMap)>0 && idFields.size() == 1 && autoKey)  {
+				String fieldName = idFields.iterator().next();
+				Field field = entityClass.getField(fieldName);
+				Method method = EntitySpecification.getWriteMethod(field);
 				
 				method.invoke(t, jdbc.getAutoIncrementId());
 			}
 			
 			return t;
 		}
-		catch(Exception e)
-		{
+		catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_CREATE,e);
 		}
 		
@@ -121,10 +139,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	 * @return 
 	 * @see com.e344.springext.repository.RepositoryInterface#update(java.lang.Object)
 	 */
-	public T update(T t) 
-	{
-		try
-		{
+	public T update(T t) {
+		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
 			StringBuilder sb = new StringBuilder(" update `");
@@ -132,55 +148,44 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			sb.append("` set ");
 			String sp="";
 			
-			Field field = null;
-			String name = null;
-			Method method = null;
 			Object val = null;
-			Iterator<Field> fieldIter = fields.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				if( ids.contains(field))
-				{
+			Iterator<String> fieldIter = fieldToColumnMap.keySet().iterator();
+			while(fieldIter.hasNext()) {
+				String fieldName = fieldIter.next();
+				if(idFields.contains(fieldName)) {
 					continue;
 				}
 				
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+				String column = fieldToColumnMap.get(fieldName);
+				Method method = fieldToMethodMap.get(fieldName);
 				val = method.invoke(t);
 				
-				if(!isTransientValue(field,val))
-				{
-					sb.append(sp).append("`").append(name).append("` = :"+name);
-					//sb.append(sp).append(name).append(" = :"+name);
-					paramMap.put(name, val);
+				if(!StringUtil.isEmpty(column) && !isTransientValue(fieldName,val)) {
+					sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+					paramMap.put(fieldName, val);
 					
 					sp=" , ";
 				}
 			}
 			
 			sp=" where ";
-			fieldIter = ids.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+			fieldIter = idFields.iterator();
+			while(fieldIter.hasNext()) {
+				String idField = fieldIter.next();
+				String column = fieldToColumnMap.get(idField);
+				Method method = fieldToMethodMap.get(idField);
 				val = method.invoke(t);
 				
-				sb.append(sp).append("`").append(name).append("` = :"+name);
-				//sb.append(sp).append(name).append(" = :"+name);
+				sb.append(sp).append("`").append(column).append("` = :"+idField);
 				sp=" and ";
 				
-				paramMap.put(name, val);
+				paramMap.put(idField, val);
 			}
 			
 			jdbc.commandUpdate(sb.toString(),paramMap);
 			
 			return t;
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
 		}
 	}
@@ -192,8 +197,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	 * @return T
 	 */
 	public T update(T t, String... forceUpdateFileds)	{
-		try
-		{
+		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			List<String> forceFileds = Arrays.asList(forceUpdateFileds);
 			
@@ -202,63 +206,51 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			sb.append("` set ");
 			String sp="";
 			
-			Field field = null;
-			String name = null;
-			Method method = null;
 			Object val = null;
-			Iterator<Field> fieldIter = fields.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				if( ids.contains(field))
-				{
+			Iterator<String> fieldIter = fieldToColumnMap.keySet().iterator();
+			while(fieldIter.hasNext()) {
+				String fieldName = fieldIter.next();
+				if(idFields.contains(fieldName)) {
 					continue;
 				}
 				
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+				String field = fieldIter.next();
+				String column = fieldToColumnMap.get(field);
+				Method method = fieldToMethodMap.get(field);
 				val = method.invoke(t);
 				
-				if(forceFileds.contains(field.getName()) || !isTransientValue(field, val))
-				{
-					sb.append(sp).append("`").append(name).append("` = :"+name);
-					//sb.append(sp).append(name).append(" = :"+name);
-					paramMap.put(name, val);
+				if(forceFileds.contains(field) || !isTransientValue(field,val)) {
+					sb.append(sp).append("`").append(column).append("` = :"+field);
+					paramMap.put(field, val);
 					
 					sp=" , ";
 				}
 			}
 			
 			sp=" where ";
-			fieldIter = ids.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+			fieldIter = idFields.iterator();
+			while(fieldIter.hasNext()) {
+				String idField = fieldIter.next();
+				String column = fieldToColumnMap.get(idField);
+				Method method = fieldToMethodMap.get(idField);
 				val = method.invoke(t);
 				
-				sb.append(sp).append("`").append(name).append("` = :"+name);
-				//sb.append(sp).append(name).append(" = :"+name);
+				sb.append(sp).append("`").append(column).append("` = :"+idField);
 				sp=" and ";
 				
-				paramMap.put(name, val);
+				paramMap.put(idField, val);
 			}
 			
 			jdbc.commandUpdate(sb.toString(),paramMap);
 			
 			return t;
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
 		}
 	}
 	
-	protected T update(T t,String where)
-	{
-		try
-		{
+	protected T update(T t,String where) {
+		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
 			StringBuilder sb = new StringBuilder(" update `");
@@ -266,28 +258,22 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			sb.append("` set ");
 			String sp="";
 			
-			Field field = null;
-			String name = null;
-			Method method = null;
 			Object val = null;
-			Iterator<Field> fieldIter = fields.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				if( ids.contains(field))
-				{
+			Iterator<String> fieldIter = fieldToColumnMap.keySet().iterator();
+			while(fieldIter.hasNext()) {
+				String fieldName = fieldIter.next();
+				if(idFields.contains(fieldName)) {
 					continue;
 				}
 				
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+				String field = fieldIter.next();
+				String column = fieldToColumnMap.get(field);
+				Method method = fieldToMethodMap.get(field);
 				val = method.invoke(t);
 				
-				if(!isTransientValue(field,val))
-				{
-					sb.append(sp).append("`").append(name).append("` = :"+name);
-					//sb.append(sp).append(name).append(" = :"+name);
-					paramMap.put(name, val);
+				if(!isTransientValue(field,val)) {
+					sb.append(sp).append("`").append(column).append("` = :"+field);
+					paramMap.put(field, val);
 					
 					sp=" , ";
 				}
@@ -299,9 +285,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			jdbc.commandUpdate(sb.toString(),paramMap);
 			
 			return t;
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
 		}
 	}
@@ -313,23 +297,18 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	 * @param t
 	 * @return T
 	 */
-	public T merge(T t)
-	{
-		try
-		{
-			if(exist(t))
-			{
+	public T merge(T t) {
+		try {
+			if(exist(t)) {
 				t = update(t);
 			}
-			else
-			{
+			else {
 				t = create(t);
 			}
 			
 			return t;
 		}
-		catch(Exception e)
-		{
+		catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
 		}
 	}
@@ -341,10 +320,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	 * @param t 
 	 * @see com.e344.springext.repository.RepositoryInterface#remove(java.lang.Object)
 	 */
-	public void remove(T t) 
-	{
-		try
-		{
+	public void remove(T t) {
+		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
 			StringBuilder sb = new StringBuilder(" delete from `");
@@ -352,36 +329,29 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			sb.append("` where 1 ");
 			String sp=" and ";
 			
-			Field field = null;
-			String name = null;
-			Method method = null;
 			Object val = null;
-			Iterator<Field> fieldIter = ids.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+			Iterator<String> fieldIter = idFields.iterator();
+			while(fieldIter.hasNext()) {
+				String idFieldName = fieldIter.next();
+				String column = fieldToColumnMap.get(idFieldName);
+				Method method = fieldToMethodMap.get(idFieldName);
 				val = method.invoke(t);
 				
-				sb.append(sp).append("`").append(name).append("` = :"+name);
-				//sb.append(sp).append(name).append(" = :"+name);
+				sb.append(sp).append("`").append(column).append("` = :"+idFieldName);
 				sp=" and ";
 				
-				paramMap.put(name, val);
+				paramMap.put(idFieldName, val);
 			}
 			jdbc.commandUpdate(sb.toString(), paramMap);
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_DELETE,e);
 		}
 	}
-
-	public void delete(Object key) 
-	{
-		try
-		{
+	/**
+	 * TODO 这个方法写的不好
+	 */
+	public void delete(Object key) {
+		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
 			StringBuilder sb = new StringBuilder(" delete from `");
@@ -389,8 +359,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			sb.append("` where 1 ");
 			String sp=" and ";
 			
-			if( ids.size()>1 && EntitySpecification.isEmbeddableAccessor(key))
-			{
+			if( idFields.size()>1 && EntitySpecification.isEmbeddableAccessor(key)) {
 				Map<Class<?>,Set<Field>> accessor = EntitySpecification.getAllAccessor(key.getClass());
 				Set<Field> keyField = accessor.get(Column.class);
 				
@@ -399,42 +368,27 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				Method method = null;
 				Object val = null;
 				Iterator<Field> fieldIter = keyField.iterator();
-				while(fieldIter.hasNext())
-				{
+				while(fieldIter.hasNext()) {
 					field = fieldIter.next();
 					name = EntitySpecification.getName(field);
 					method = EntitySpecification.getReadMethod(field);
 					val = method.invoke(key);
 					
 					sb.append(sp).append("`").append(name).append("` = :"+name);
-					//sb.append(sp).append(name).append(" = :"+name);
 					sp=" and ";
 					
 					paramMap.put(name, val);
 				}
-			}
-			else
-			{
-				Field field = null;
-				String name = null;
-				Iterator<Field> fieldIter = ids.iterator();
-				while(fieldIter.hasNext())
-				{
-					field = fieldIter.next();
-					name = EntitySpecification.getName(field);
-					
-					sb.append(sp).append("`").append(name).append("` = :"+name);
-					//sb.append(sp).append(name).append(" = :"+name);
-					sp=" and ";
-					
-					paramMap.put(name, key);
-				}
+			} else {
+				String fieldName = idFields.iterator().next();
+				String column = fieldToColumnMap.get(fieldName);
+				
+				sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+				paramMap.put(fieldName, key);
 			}
 			
 			jdbc.commandUpdate(sb.toString(), paramMap);
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_DELETE,e);
 		}
 		
@@ -451,20 +405,17 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public T get( Object key ) {
 		return get(key,new String[]{});
 	}
-	
+	/**
+	 * TODO 这个方法写的不好
+	 */
 	protected T get( Object key, String... columnLabelNames ) {
-		
-		try
-		{
+		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
 			StringBuilder sb = new StringBuilder(" select * ");
-			if( null != columnLabelNames)
-			{
-				for(String columnLabelName : columnLabelNames)
-				{
-					if(!StringUtils.isEmpty(columnLabelName))
-					{
+			if( null != columnLabelNames) {
+				for(String columnLabelName : columnLabelNames) {
+					if(!StringUtils.isEmpty(columnLabelName)) {
 						sb.append(","+columnLabelName);
 					}
 				}
@@ -475,8 +426,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			String sp=" and ";
 			
-			if( ids.size()>1 && EntitySpecification.isEmbeddableAccessor(key))
-			{
+			if( idFields.size()>1 && EntitySpecification.isEmbeddableAccessor(key)) {
 				Map<Class<?>,Set<Field>> accessor = EntitySpecification.getAllAccessor(key.getClass());
 				Set<Field> keyField = accessor.get(Column.class);
 				
@@ -485,42 +435,27 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				Method method = null;
 				Object val = null;
 				Iterator<Field> fieldIter = keyField.iterator();
-				while(fieldIter.hasNext())
-				{
+				while(fieldIter.hasNext()) {
 					field = fieldIter.next();
 					name = EntitySpecification.getName(field);
 					method = EntitySpecification.getReadMethod(field);
 					val = method.invoke(key);
 					
 					sb.append(sp).append("`").append(name).append("` = :"+name);
-					//sb.append(sp).append(name).append(" = :"+name);
 					sp=" and ";
 					
 					paramMap.put(name, val);
 				}
-			}
-			else
-			{
-				Field field = null;
-				String name = null;
-				Iterator<Field> fieldIter = ids.iterator();
-				while(fieldIter.hasNext())
-				{
-					field = fieldIter.next();
-					name = EntitySpecification.getName(field);
-					
-					sb.append(sp).append("`").append(name).append("` = :"+name);
-					//sb.append(sp).append(name).append(" = :"+name);
-					sp=" and ";
-					
-					paramMap.put(name, key);
-				}
+			} else {
+				String fieldName = idFields.iterator().next();
+				String column = fieldToColumnMap.get(fieldName);
+				
+				sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+				paramMap.put(fieldName, key);
 			}
 			
 			return jdbc.getEntity(entityClass, sb.toString(), paramMap);
-		}
-		catch(Exception e)
-		{
+		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
 	}
@@ -532,180 +467,223 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	 * @param t
 	 * @return boolean
 	 */
-	public boolean exist(T t)
-	{
-		try
-		{
+	public boolean exist(T t) {
+		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
-			StringBuilder sb = new StringBuilder(" select count(1) from `");
+			StringBuilder sb = new StringBuilder(" select 1 from `");
 			sb.append(tableName);
 			sb.append("` where 1 ");
 			String sp=" and ";
 			
-			Field field = null;
-			String name = null;
-			Method method = null;
 			Object val = null;
-			Iterator<Field> fieldIter = ids.iterator();
-			while(fieldIter.hasNext())
-			{
-				field = fieldIter.next();
-				name = EntitySpecification.getName(field);
-				method = EntitySpecification.getReadMethod(field);
+			Iterator<String> fieldIter = idFields.iterator();
+			while(fieldIter.hasNext()) {
+				String fieldName = fieldIter.next();
+				String column = fieldToColumnMap.get(fieldName);
+				Method method = fieldToMethodMap.get(fieldName);
 				val = method.invoke(t);
 				
-				sb.append(sp).append("`").append(name).append("` = :"+name);
-				//sb.append(sp).append(name).append(" = :"+name);
+				sb.append(sp).append("`").append(column).append("` = :"+fieldName);
 				sp=" and ";
 				
-				paramMap.put(name, val);
+				paramMap.put(fieldName, val);
 			}
+			sb.append(" LIMIT 1");
 			
-			int count = jdbc.queryForInt(sb.toString(), paramMap);
-			
-			return count>0;
-		}
-		catch(Exception e)
-		{
+			return jdbc.queryForInt(sb.toString(), paramMap) > 0;
+		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
 	}
 	
-	private static boolean isTransientValue(Field field,Object value)
-	{
-		return value==null || ( PrimitiveTypeChecked.checkNumberType(field.getType()) && ("0".equals(value.toString()) || "0.0".equals(value.toString())) );
+	private boolean isTransientValue(String fieldame, Object value) {
+		return value==null || ( transientFields.contains(fieldame) && ("0".equals(value.toString()) || "0.0".equals(value.toString())) );
 	}
 
-	@Override
-	public List<T> load(RepositoryFilter filter) {
-		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
-		
-		Map<String, Object> params = new HashMap<String, Object>();
-		
+	private void attachFilter(StringBuffer sql, RepositoryFilter filter, Map<String, Object> params) {
 		if(filter != null) {
-			List<SqlQuery> querys = filter.toSqlQuerys();
-			
-			if(!CollectionUtil.isEmpty(querys)) {
-				for(SqlQuery query : querys) {
-					sql.append(query.toSearchSql(params));
+			filter.init();
+			if(!CollectionUtil.isEmpty(filter.getQuerys())) {
+				for(repositoryQuery query : filter.getQuerys()) {
+					sql.append(query.toSqlQuery(params, fieldToColumnMap));
 				}
-				
-				sql.append(filter.toOrders());
+			}
+			
+			if(!CollectionUtil.isEmpty(filter.getOrders())) {
+				sql.append(" ORDER BY ");
+				String splite = "";
+				for(repositoryOrder order : filter.getOrders()) {
+					sql.append(splite).append(order.toSqlOrder(fieldToColumnMap));
+					splite = ",";
+				}
 			}
 		}
-		
-		return jdbc.getList(entityClass, sql.toString(), params);
+	}
+	
+	@Override
+	public List<T> load(RepositoryFilter filter) {
+		try {
+			StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			return jdbc.getList(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
 	}
 
 	@Override
 	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize) {
-		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
-		
-		Map<String, Object> params = new HashMap<String, Object>();
-		
-		if(filter != null) {
-			List<SqlQuery> querys = filter.toSqlQuerys();
+		try {
+			StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
 			
-			if(!CollectionUtil.isEmpty(querys)) {
-				for(SqlQuery query : querys) {
-					sql.append(query.toSearchSql(params));
-				}
-				
-				sql.append(filter.toOrders());
-			}
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+	
+			sql.append(" LIMIT :rowOffset, :rowSize");
+			params.put("rowOffset", (pageNo - 1) * rowSize);
+			params.put("rowSize", rowSize);
+			
+			return jdbc.getList(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
-
-
-		sql.append(" LIMIT :rowOffset, :rowSize");
-		params.put("rowOffset", (pageNo - 1) * rowSize);
-		params.put("rowSize", rowSize);
-		
-		return jdbc.getList(entityClass, sql.toString(), params);
 	}
 
 	@Override
 	public List<T> load(RepositoryFilter filter, int limit) {
-		StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
-		
-		Map<String, Object> params = new HashMap<String, Object>();
-		
-		if(filter != null) {
-			List<SqlQuery> querys = filter.toSqlQuerys();
+		try {
+			StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
 			
-			if(!CollectionUtil.isEmpty(querys)) {
-				for(SqlQuery query : querys) {
-					sql.append(query.toSearchSql(params));
-				}
-				
-				sql.append(filter.toOrders());
-			}
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			sql.append(" LIMIT :limit");
+			params.put("limit", limit);
+			
+			return jdbc.getList(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
-		
-		sql.append(" LIMIT :limit");
-		params.put("limit", limit);
-		
-		return jdbc.getList(entityClass, sql.toString(), params);
 	}
 
 	@Override
 	public int count(RepositoryFilter filter) {
-		StringBuffer sql = new StringBuffer("SELECT count(1) FROM `").append(tableName).append("` WHERE 1");
-		
-		if(filter == null || !CollectionUtil.isEmpty(filter.toSqlQuerys())) {
-			return jdbc.queryForInt(sql.toString());
-		}
-		
-		Map<String, Object> params = new HashMap<String, Object>();
-
-		if(filter != null) {
-			List<SqlQuery> querys = filter.toSqlQuerys();
+		try {
+			StringBuffer sql = new StringBuffer("SELECT count(1) FROM `").append(tableName).append("` WHERE 1");
 			
-			if(!CollectionUtil.isEmpty(querys)) {
-				for(SqlQuery query : querys) {
-					sql.append(query.toSearchSql(params));
-				}
+			if(filter == null || !CollectionUtil.isEmpty(filter.getQuerys())) {
+				return jdbc.queryForInt(sql.toString());
 			}
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+	
+			attachFilter(sql, filter, params);
+			
+			return jdbc.queryForInt(sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
-		
-		return jdbc.queryForInt(sql.toString(), params);
 	}
 
 	@Override
 	public T get(RepositoryFilter filter, String... requiredFields) {
-		StringBuffer sql = new StringBuffer("SELECT ");
-		if(requiredFields == null) {
-			sql.append("*");
-		} else {
-			Iterator<Field> fieldIter = fields.iterator();
-			String split = "";
-			for(String fieldStr : requiredFields) {
-				//TODO 这里的实现导致O(N2)的复杂度 待优化(HashMap?)
-				while(fieldIter.hasNext()) {
-					Field filed = fieldIter.next();
-					if(filed.getName().equals(fieldStr)) {
-						String name = EntitySpecification.getName(filed);
-						sql.append(split).append("`").append(name).append("` ");
-						split = ",";
+		try {
+			StringBuffer sql = new StringBuffer("SELECT ");
+			if(requiredFields == null) {
+				sql.append("*");
+			} else {
+				String split = "";
+				for(String fieldStr : requiredFields) {
+					String column = fieldToColumnMap.get(fieldStr);
+					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
+					if(StringUtil.isEmpty(column)) {
+						continue;
 					}
+					
+					sql.append(split).append("`").append(column).append("` ");
+					split = ",";
 				}
 			}
-		}
-		
-		sql.append(" FROM `").append(tableName).append("` WHERE 1");
-		
-		Map<String, Object> params = new HashMap<String, Object>();
-		if(filter != null) {
-			List<SqlQuery> querys = filter.toSqlQuerys();
 			
-			if(!CollectionUtil.isEmpty(querys)) {
-				for(SqlQuery query : querys) {
-					sql.append(query.toSearchSql(params));
+			sql.append(" FROM `").append(tableName).append("` WHERE 1");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			sql.append(" LIMIT 1");
+			return jdbc.getEntity(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+
+	@Override
+	public int delete(RepositoryFilter filter) {
+		try {
+			StringBuffer sql = new StringBuffer("DELETE FROM `").append(tableName).append("` WHERE 1 ");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			return jdbc.commandUpdate(sql.toString(),params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_DELETE,e);
+		}
+	}
+	
+	@Override
+	public int update(T t, RepositoryFilter filter, String... updateFields) {
+		try {
+			Map<String,Object> paramMap = new HashMap<String, Object>();
+			
+			StringBuffer sb = new StringBuffer(" UPDATE `");
+			sb.append(tableName);
+			sb.append("` SET ");
+			String sp="";
+			
+			Object val = null;
+			Iterator<String> fieldIter = null;
+			if(CollectionUtil.isEmpty(updateFields)) {
+				fieldIter = fieldToColumnMap.keySet().iterator();
+			} else {
+				fieldIter = Arrays.asList(updateFields).iterator();
+			}
+			
+			while(fieldIter.hasNext()) {
+				String fieldName = fieldIter.next();
+				if(idFields.contains(fieldName)) {
+					continue;
+				}
+				
+				String column = fieldToColumnMap.get(fieldName);
+				Method method = fieldToMethodMap.get(fieldName);
+
+				if(!StringUtil.isEmpty(column) && !isTransientValue(fieldName,val)) {
+					val = method.invoke(t);
+					sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+					paramMap.put(fieldName, val);
+					
+					sp=" , ";
+				} else {
+					LogHelper.warn("\n 属性name书写有误:" + fieldName);
 				}
 			}
+			
+			sb.append(" WHERE 1 ");
+			attachFilter(sb, filter, paramMap);
+			
+			return jdbc.commandUpdate(sb.toString(),paramMap);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
 		}
-		
-		sql.append(" LIMIT 1");
-		return jdbc.getEntity(entityClass, sql.toString(), params);
 	}
 }

@@ -50,7 +50,6 @@ public interface RepositoryInterface<T> {
 	 * @param t void
 	 */
 	public void delete(Object key);
-	
 	/**
 	 * 
 	 * <p>Title: get</p> 
@@ -72,7 +71,8 @@ public interface RepositoryInterface<T> {
 	 * <p>Title: get</p> 
 	 * <p>Description: 根据搜索条件获取,</p> 
 	 * @param filter 搜索条件
-	 * @param requiredFields 本次查询需要的属性名称,该参数在数据来源是数据库时可以优化性能
+	 * @param requiredFields 本次查询需要的属性名称(ps:是对象的属性不是数据库字段),
+	 * 						   该入参主要为了优化数据来源是关系型数据库的时的sql,为空则返回完整对象
 	 * @return T
 	 */
 	public T get(RepositoryFilter filter, String... requiredFields);
@@ -108,4 +108,22 @@ public interface RepositoryInterface<T> {
 	 * @return T
 	 */
 	public int count(RepositoryFilter filter);
+	/**
+	 * 
+	 * <p>Title: delete</p> 
+	 * <p>Description: 按条件删除数据,返回删除数据数</p> 
+	 * @param filter
+	 * @return int
+	 */
+	public int delete(RepositoryFilter filter);
+	/**
+	 * 
+	 * <p>Title: delete</p> 
+	 * <p>Description: 按条件更新数据,返回更新数据数</p> 
+	 * @param t 用户存放数据字段的容器
+	 * @param filter 过滤器
+	 * @param updateFields 要求更新的字段(ps:要写对象的属性而不是数据库字段),为空更新费id字段
+	 * @return int
+	 */
+	public int update(T t, RepositoryFilter filter, String... updateFields);
 }
