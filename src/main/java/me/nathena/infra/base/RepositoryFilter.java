@@ -68,6 +68,13 @@ public class RepositoryFilter {
 		querys.add(new repositoryQuery(field, value, method, queryConnect.AND));
 	}
 	
+	public void addQuery(String field, Object value, queryConnect connect) {
+		if(StringUtil.isEmpty(value)) {
+			return;
+		}
+		querys.add(new repositoryQuery(field, value, queryMethod.EQ, connect));
+	}
+	
 	public void addQuery(String field, Object value, queryMethod method, queryConnect connect) {
 		if(StringUtil.isEmpty(value)) {
 			return;

@@ -71,6 +71,14 @@ public interface RepositoryInterface<T> {
 	 * <p>Title: get</p> 
 	 * <p>Description: 根据搜索条件获取,</p> 
 	 * @param filter 搜索条件
+	 * @return T
+	 */
+	public T get(RepositoryFilter filter);
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 根据搜索条件获取,</p> 
+	 * @param filter 搜索条件
 	 * @param requiredFields 本次查询需要的属性名称(ps:是对象的属性不是数据库字段),
 	 * 						   该入参主要为了优化数据来源是关系型数据库的时的sql,为空则返回完整对象
 	 * @return T
@@ -83,7 +91,7 @@ public interface RepositoryInterface<T> {
 	 * @param key
 	 * @return T
 	 */
-	public List<T> load(RepositoryFilter filter);
+	public List<T> load(RepositoryFilter filter, String... requiredFields);
 	/**
 	 * 
 	 * <p>Title: load</p> 
@@ -91,7 +99,7 @@ public interface RepositoryInterface<T> {
 	 * @param key
 	 * @return T
 	 */
-	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize);
+	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize, String... requiredFields);
 	/**
 	 * 
 	 * <p>Title: load</p> 
@@ -99,7 +107,7 @@ public interface RepositoryInterface<T> {
 	 * @param key
 	 * @return T
 	 */
-	public List<T> load(RepositoryFilter filter, int limit);
+	public List<T> load(RepositoryFilter filter, int limit, String... requiredFields);
 	/**
 	 * 
 	 * <p>Title: total</p> 

@@ -520,58 +520,6 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			}
 		}
 	}
-	
-	@Override
-	public List<T> load(RepositoryFilter filter) {
-		try {
-			StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
-			
-			Map<String, Object> params = new HashMap<String, Object>();
-			
-			attachFilter(sql, filter, params);
-			
-			return jdbc.getList(entityClass, sql.toString(), params);
-		} catch(Exception e) {
-			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
-		}
-	}
-
-	@Override
-	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize) {
-		try {
-			StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
-			
-			Map<String, Object> params = new HashMap<String, Object>();
-			
-			attachFilter(sql, filter, params);
-	
-			sql.append(" LIMIT :rowOffset, :rowSize");
-			params.put("rowOffset", (pageNo - 1) * rowSize);
-			params.put("rowSize", rowSize);
-			
-			return jdbc.getList(entityClass, sql.toString(), params);
-		} catch(Exception e) {
-			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
-		}
-	}
-
-	@Override
-	public List<T> load(RepositoryFilter filter, int limit) {
-		try {
-			StringBuffer sql = new StringBuffer("SELECT * FROM `").append(tableName).append("` WHERE 1");
-			
-			Map<String, Object> params = new HashMap<String, Object>();
-			
-			attachFilter(sql, filter, params);
-			
-			sql.append(" LIMIT :limit");
-			params.put("limit", limit);
-			
-			return jdbc.getList(entityClass, sql.toString(), params);
-		} catch(Exception e) {
-			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
-		}
-	}
 
 	@Override
 	public int count(RepositoryFilter filter) {
@@ -596,7 +544,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public T get(RepositoryFilter filter, String... requiredFields) {
 		try {
 			StringBuffer sql = new StringBuffer("SELECT ");
-			if(requiredFields == null) {
+			if(CollectionUtil.isEmpty(requiredFields)) {
 				sql.append("*");
 			} else {
 				String split = "";
@@ -624,7 +572,25 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
 	}
-
+	
+	@Override
+	public T get(RepositoryFilter filter) {
+		try {
+			StringBuffer sql = new StringBuffer("SELECT * FROM ");
+			
+			sql.append(tableName).append("` WHERE 1");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			sql.append(" LIMIT 1");
+			return jdbc.getEntity(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+	
 	@Override
 	public int delete(RepositoryFilter filter) {
 		try {
@@ -684,6 +650,111 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			return jdbc.commandUpdate(sb.toString(),paramMap);
 		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
+		}
+	}
+
+	@Override
+	public List<T> load(RepositoryFilter filter, String... requiredFields) {
+		try {
+			StringBuffer sql = new StringBuffer("SELECT ");
+			if(CollectionUtil.isEmpty(requiredFields)) {
+				sql.append("*");
+			} else {
+				String split = "";
+				for(String fieldStr : requiredFields) {
+					String column = fieldToColumnMap.get(fieldStr);
+					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
+					if(StringUtil.isEmpty(column)) {
+						continue;
+					}
+					
+					sql.append(split).append("`").append(column).append("` ");
+					split = ",";
+				}
+			}
+			
+			sql.append(" FROM `").append(tableName).append("` WHERE 1");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			return jdbc.getList(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+
+	@Override
+	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize,
+			String... requiredFields) {
+		try {
+			StringBuffer sql = new StringBuffer("SELECT ");
+			if(CollectionUtil.isEmpty(requiredFields)) {
+				sql.append("*");
+			} else {
+				String split = "";
+				for(String fieldStr : requiredFields) {
+					String column = fieldToColumnMap.get(fieldStr);
+					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
+					if(StringUtil.isEmpty(column)) {
+						continue;
+					}
+					
+					sql.append(split).append("`").append(column).append("` ");
+					split = ",";
+				}
+			}
+			
+			sql.append(" FROM `").append(tableName).append("` WHERE 1");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			sql.append(" LIMIT :rowOffset, :rowSize");
+			params.put("rowOffset", (pageNo - 1) * rowSize);
+			params.put("rowSize", rowSize);
+			
+			return jdbc.getList(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+
+	@Override
+	public List<T> load(RepositoryFilter filter, int limit,
+			String... requiredFields) {
+		try {
+			StringBuffer sql = new StringBuffer("SELECT ");
+			if(CollectionUtil.isEmpty(requiredFields)) {
+				sql.append("*");
+			} else {
+				String split = "";
+				for(String fieldStr : requiredFields) {
+					String column = fieldToColumnMap.get(fieldStr);
+					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
+					if(StringUtil.isEmpty(column)) {
+						continue;
+					}
+					
+					sql.append(split).append("`").append(column).append("` ");
+					split = ",";
+				}
+			}
+			
+			sql.append(" FROM `").append(tableName).append("` WHERE 1");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachFilter(sql, filter, params);
+			
+			sql.append(" LIMIT :limit");
+			params.put("limit", limit);
+			
+			return jdbc.getList(entityClass, sql.toString(), params);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
 	}
 }
