@@ -633,7 +633,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				String column = fieldToColumnMap.get(fieldName);
 				Method method = fieldToMethodMap.get(fieldName);
 
-				if(!StringUtil.isEmpty(column) && !isTransientValue(fieldName,val)) {
+				if(!StringUtil.isEmpty(column)) {
 					val = method.invoke(t);
 					sb.append(sp).append("`").append(column).append("` = :"+fieldName);
 					paramMap.put(fieldName, val);
