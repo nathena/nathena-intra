@@ -214,14 +214,13 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 					continue;
 				}
 				
-				String field = fieldIter.next();
-				String column = fieldToColumnMap.get(field);
-				Method method = fieldToMethodMap.get(field);
+				String column = fieldToColumnMap.get(fieldName);
+				Method method = fieldToMethodMap.get(fieldName);
 				val = method.invoke(t);
 				
-				if(forceFileds.contains(field) || !isTransientValue(field,val)) {
-					sb.append(sp).append("`").append(column).append("` = :"+field);
-					paramMap.put(field, val);
+				if(forceFileds.contains(fieldName) || !isTransientValue(fieldName,val)) {
+					sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+					paramMap.put(fieldName, val);
 					
 					sp=" , ";
 				}
@@ -266,14 +265,13 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 					continue;
 				}
 				
-				String field = fieldIter.next();
-				String column = fieldToColumnMap.get(field);
-				Method method = fieldToMethodMap.get(field);
+				String column = fieldToColumnMap.get(fieldName);
+				Method method = fieldToMethodMap.get(fieldName);
 				val = method.invoke(t);
 				
-				if(!isTransientValue(field,val)) {
-					sb.append(sp).append("`").append(column).append("` = :"+field);
-					paramMap.put(field, val);
+				if(!isTransientValue(fieldName,val)) {
+					sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+					paramMap.put(fieldName, val);
 					
 					sp=" , ";
 				}
@@ -663,8 +661,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				String split = "";
 				for(String fieldStr : requiredFields) {
 					String column = fieldToColumnMap.get(fieldStr);
-					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
 					if(StringUtil.isEmpty(column)) {
+						LogHelper.error("\n == 属性名属性错误" + fieldStr);
 						continue;
 					}
 					
@@ -696,8 +694,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				String split = "";
 				for(String fieldStr : requiredFields) {
 					String column = fieldToColumnMap.get(fieldStr);
-					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
 					if(StringUtil.isEmpty(column)) {
+						LogHelper.error("\n == 属性名属性错误" + fieldStr);
 						continue;
 					}
 					
@@ -733,8 +731,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				String split = "";
 				for(String fieldStr : requiredFields) {
 					String column = fieldToColumnMap.get(fieldStr);
-					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
 					if(StringUtil.isEmpty(column)) {
+						LogHelper.error("\n == 属性名属性错误" + fieldStr);
 						continue;
 					}
 					

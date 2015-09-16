@@ -54,6 +54,10 @@ public class RepositoryFilter {
 	public void clearOrder() {
 		orders.clear();
 	}
+	public void clear() {
+		querys.clear();
+		orders.clear();
+	}
 	public void addQuery(String field, Object value) {
 		if(StringUtil.isEmpty(value)) {
 			return;
@@ -119,6 +123,11 @@ class repositoryQuery {
 		}
 		
 		String column = columnMap.get(field);
+		if(StringUtil.isEmpty(column)) {
+			LogHelper.error("\n == 属性名属性错误");
+			return null;
+		}
+		
 		String r = field + RandomHelper.nextString(3);
 		switch(queryMethod) {
 		case IN:
@@ -181,6 +190,11 @@ class repositoryOrder {
 	}
 	
 	public String toSqlOrder(Map<String, String> columnMap) {
+		String column = columnMap.get(field);
+		if(StringUtil.isEmpty(column)) {
+			LogHelper.error("\n == 属性名属性错误");
+			return null;
+		}
 		return new StringBuffer("`").append(columnMap.get(field)).append("` ").append(queryOrder.name()).toString();
 	}
 	
