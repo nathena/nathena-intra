@@ -124,7 +124,7 @@ class repositoryQuery {
 		
 		String column = columnMap.get(field);
 		if(StringUtil.isEmpty(column)) {
-			LogHelper.error("\n == 属性名属性错误");
+			LogHelper.error("\n == 属性名属性错误" + field);
 			return null;
 		}
 		
@@ -192,7 +192,7 @@ class repositoryOrder {
 	public String toSqlOrder(Map<String, String> columnMap) {
 		String column = columnMap.get(field);
 		if(StringUtil.isEmpty(column)) {
-			LogHelper.error("\n == 属性名属性错误");
+			LogHelper.error("\n == 属性名属性错误" + field);
 			return null;
 		}
 		return new StringBuffer("`").append(columnMap.get(field)).append("` ").append(queryOrder.name()).toString();

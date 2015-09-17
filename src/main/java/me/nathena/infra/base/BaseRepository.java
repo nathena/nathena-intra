@@ -546,10 +546,10 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				sql.append("*");
 			} else {
 				String split = "";
-				for(String fieldStr : requiredFields) {
-					String column = fieldToColumnMap.get(fieldStr);
-					column = StringUtil.isEmpty(column) ? fieldToColumnMap.get(fieldStr) : column;
+				for(String fieldName : requiredFields) {
+					String column = fieldToColumnMap.get(fieldName);
 					if(StringUtil.isEmpty(column)) {
+						LogHelper.error("\n == 属性名属性错误" + fieldName);
 						continue;
 					}
 					
@@ -638,7 +638,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 					
 					sp=" , ";
 				} else {
-					LogHelper.warn("\n 属性name书写有误:" + fieldName);
+					LogHelper.error("\n == 属性名属性错误" + fieldName);
 				}
 			}
 			
@@ -659,10 +659,10 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 				sql.append("*");
 			} else {
 				String split = "";
-				for(String fieldStr : requiredFields) {
-					String column = fieldToColumnMap.get(fieldStr);
+				for(String fieldName : requiredFields) {
+					String column = fieldToColumnMap.get(fieldName);
 					if(StringUtil.isEmpty(column)) {
-						LogHelper.error("\n == 属性名属性错误" + fieldStr);
+						LogHelper.error("\n == 属性名属性错误" + fieldName);
 						continue;
 					}
 					
