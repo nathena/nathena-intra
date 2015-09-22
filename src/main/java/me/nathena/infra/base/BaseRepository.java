@@ -116,7 +116,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			if(jdbc.commandUpdate(sb.toString(),paramMap)>0 && idFields.size() == 1 && autoKey)  {
 				String fieldName = idFields.iterator().next();
-				Field field = entityClass.getField(fieldName);
+				Field field = entityClass.getDeclaredField(fieldName);
 				Method method = EntitySpecification.getWriteMethod(field);
 				
 				method.invoke(t, jdbc.getAutoIncrementId());
