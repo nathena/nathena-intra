@@ -226,12 +226,13 @@ public final class DateTimeUtil
 
 	/**
 	 * @说明 返回系统时间月份
+	 * 2015-8-31 Gaowx 系统时间比实际月数少一个月
 	 * @return int
 	 */
 	public static int getMonth() 
 	{
 		Calendar calendar = getCalendar();
-		return calendar.get(Calendar.MONTH);
+		return calendar.get(Calendar.MONTH) + 1;
 	}
 
 	/**
@@ -747,6 +748,17 @@ public final class DateTimeUtil
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
+		return new Date(calendar.getTimeInMillis());
+	}
+
+	public static Date getDaysLater(long mills, int day){
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(mills);
+		calendar.add(Calendar.DATE, day);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
 		return new Date(calendar.getTimeInMillis());
 	}
 

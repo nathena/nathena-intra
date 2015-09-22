@@ -94,14 +94,6 @@ public class UUIDHexGenerator
     public static void main( String[] args ) throws Exception {
         
         UUIDHexGenerator gen = new UUIDHexGenerator();
-        UUIDHexGenerator gen2 = new UUIDHexGenerator();
-
-        for ( int i=0; i<10; i++) {
-            String id = (String) gen.generateUUID();
-            System.out.println(id);
-            String id2 = (String) gen2.generateUUID();
-            System.out.println(id2);
-        }
-
+        System.out.println(gen.generateUUID());
     }
 }

@@ -16,12 +16,11 @@ public abstract class BaseControl {
 	{
 		return true;
 	}
-	
+
 	public boolean afterCompletion(HttpServletRequest request,HttpServletResponse response)
 	{
 		return true;
 	}
-	
 	
 	public void toResponse(Object content)
 	{

@@ -5,6 +5,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import me.nathena.infra.base.BaseControl;
 import me.nathena.infra.base.MustLoginedInterface;
+import me.nathena.infra.base.RequestValidate;
+import me.nathena.infra.base.RequestValidateResponse;
+import me.nathena.infra.base.RequestValidator;
 
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -13,30 +16,41 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 {
 
 	@Override
-	public boolean preHandle(HttpServletRequest request,HttpServletResponse response, Object handler) throws Exception {
+	public boolean preHandle(HttpServletRequest request,HttpServletResponse response, 
+			Object handler) throws Exception {
 		
 		request.setCharacterEncoding("UTF-8");
 		response.setCharacterEncoding("UTF-8");
 		
-		if( handler instanceof HandlerMethod)
-		{
+		if( handler instanceof HandlerMethod) {
 			HandlerMethod handlerMethod = (HandlerMethod)handler;
 			Object bean = handlerMethod.getBean();
-			
-			if(bean instanceof BaseControl)
-			{
-				BaseControl obj = (BaseControl)bean;
-				if( !obj.preHandle(request, response) )
-				{
+
+			RequestValidate validates = handlerMethod.getMethodAnnotation(RequestValidate.class);
+			if(validates != null) {
+				String errMsg = RequestValidator.getErrorMsg(request, validates);
+				if(!RequestValidator.isPass(errMsg)) {
+					if(bean instanceof RequestValidateResponse) {
+						((RequestValidateResponse)bean).validateResponse(request, response, 
+								validates.failedView(), errMsg);
+					} else {
+						RequestValidator.defaultResponse(request, response, validates.failedView(), errMsg);
+					}
 					return false;
 				}
 			}
 			
-			if(bean instanceof MustLoginedInterface)
-			{
+			if(bean instanceof BaseControl) {
+				BaseControl obj = (BaseControl)bean;
+				
+				if(!obj.preHandle(request, response)) {
+					return false;
+				}
+			}
+			
+			if(bean instanceof MustLoginedInterface) {
 				MustLoginedInterface obj = (MustLoginedInterface)bean;
-				if(!obj.isLogined(request,response))
-				{
+				if(!obj.isLogined(request,response)) {
 					return false;
 				}
 			}
@@ -44,22 +58,18 @@ public class SpringHandlerInterceptorAdapter extends HandlerInterceptorAdapter
 		
 		return super.preHandle(request, response, handler);
 	}
-
 	
 	@Override
-	public void afterCompletion(HttpServletRequest request,HttpServletResponse response, Object handler, Exception ex)
-			throws Exception {
+	public void afterCompletion(HttpServletRequest request,HttpServletResponse response, 
+			Object handler, Exception ex) throws Exception {
 		
-		if( handler instanceof HandlerMethod)
-		{
+		if( handler instanceof HandlerMethod) {
 			HandlerMethod handlerMethod = (HandlerMethod)handler;
 			Object bean = handlerMethod.getBean();
 			
-			if(bean instanceof BaseControl)
-			{
+			if(bean instanceof BaseControl) {
 				BaseControl obj = (BaseControl)bean;
-				if( !obj.afterCompletion(request, response) )
-				{
+				if(!obj.afterCompletion(request, response)) {
 					return;
 				}
 			}
