@@ -485,6 +485,28 @@ public final class DateTimeUtil
 		calendar.setTime(dte);
 		return calendar.get(Calendar.DAY_OF_WEEK);
 	}
+
+	public static long getMonthStartTime() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime().getTime();
+	}
+
+	public static long getWeekStartTime() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setFirstDayOfWeek(Calendar.MONDAY);
+		calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return calendar.getTime().getTime();
+	}
+
 	/**
 	 * 
 	 *摘要：
@@ -775,9 +797,7 @@ public final class DateTimeUtil
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		for(int i=0;i<20;i++) {
-			System.out.println("UUIDHexGenerator :" +UUIDHexGenerator.generator() + "  randomUUID   " + UUID.randomUUID().toString().replace("-", ""));
-
-		}
+		System.out.println(getWeekStartTime());
+		System.out.println(getMonthStartTime());
 	}
 }
