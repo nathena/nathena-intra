@@ -784,6 +784,16 @@ public final class DateTimeUtil
 		return new Date(calendar.getTimeInMillis());
 	}
 
+	public static Date getDaysLater(int day){
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.DATE, day);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		return new Date(calendar.getTimeInMillis());
+	}
+
 	public static String getNextDayString(Date time, String format){
 		if(time == null)
 			return "";
@@ -791,6 +801,25 @@ public final class DateTimeUtil
 		return getDateToStr(date, format);
 	}
 
+	public static Date getYesterdayBegin(){
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.DATE, -1);
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
+		return new Date(calendar.getTimeInMillis());
+	}
+
+	public static Date getYesterdayEnd(){
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.DATE, -1);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 59);
+		return new Date(calendar.getTimeInMillis());
+	}
 
 
 	/**
