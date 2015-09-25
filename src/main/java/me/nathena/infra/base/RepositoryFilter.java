@@ -98,7 +98,8 @@ public class RepositoryFilter {
 		return orders;
 	}
 	
-	public void init() {}
+	public void defaultQuery() {}
+	public void defaultOrder() {}
 }
 
 class repositoryQuery {

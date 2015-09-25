@@ -499,15 +499,20 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		return value==null || ( transientFields.contains(fieldame) && ("0".equals(value.toString()) || "0.0".equals(value.toString())) );
 	}
 
-	private void attachFilter(StringBuffer sql, RepositoryFilter filter, Map<String, Object> params) {
+	private void attachQuery(StringBuffer sql, RepositoryFilter filter, Map<String, Object> params) {
 		if(filter != null) {
-			filter.init();
+			filter.defaultQuery();
 			if(!CollectionUtil.isEmpty(filter.getQuerys())) {
 				for(repositoryQuery query : filter.getQuerys()) {
 					sql.append(query.toSqlQuery(params, fieldToColumnMap));
 				}
 			}
-			
+		}
+	}
+	
+	private void attachOrder(StringBuffer sql, RepositoryFilter filter, Map<String, Object> params) {
+		if(filter != null) {
+			filter.defaultOrder();
 			if(!CollectionUtil.isEmpty(filter.getOrders())) {
 				sql.append(" ORDER BY ");
 				String splite = "";
@@ -524,13 +529,13 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		try {
 			StringBuffer sql = new StringBuffer("SELECT count(1) FROM `").append(tableName).append("` WHERE 1");
 			
-			if(filter == null || !CollectionUtil.isEmpty(filter.getQuerys())) {
+			if(filter == null) {
 				return jdbc.queryForInt(sql.toString());
 			}
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 	
-			attachFilter(sql, filter, params);
+			attachQuery(sql, filter, params);
 			
 			return jdbc.queryForInt(sql.toString(), params);
 		} catch(Exception e) {
@@ -562,7 +567,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			attachFilter(sql, filter, params);
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
 			
 			sql.append(" LIMIT 1");
 			return jdbc.getEntity(entityClass, sql.toString(), params);
@@ -580,7 +586,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			attachFilter(sql, filter, params);
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
 			
 			sql.append(" LIMIT 1");
 			return jdbc.getEntity(entityClass, sql.toString(), params);
@@ -596,7 +603,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			attachFilter(sql, filter, params);
+			attachQuery(sql, filter, params);
 			
 			return jdbc.commandUpdate(sql.toString(),params);
 		} catch(Exception e) {
@@ -643,7 +650,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			}
 			
 			sb.append(" WHERE 1 ");
-			attachFilter(sb, filter, paramMap);
+			attachQuery(sb, filter, paramMap);
 			
 			return jdbc.commandUpdate(sb.toString(),paramMap);
 		} catch(Exception e) {
@@ -675,7 +682,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			attachFilter(sql, filter, params);
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
 			
 			return jdbc.getList(entityClass, sql.toString(), params);
 		} catch(Exception e) {
@@ -708,7 +716,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			attachFilter(sql, filter, params);
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
 			
 			sql.append(" LIMIT :rowOffset, :rowSize");
 			params.put("rowOffset", (pageNo - 1) * rowSize);
@@ -745,7 +754,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 			
-			attachFilter(sql, filter, params);
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
 			
 			sql.append(" LIMIT :limit");
 			params.put("limit", limit);
