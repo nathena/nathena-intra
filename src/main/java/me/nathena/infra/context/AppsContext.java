@@ -8,6 +8,8 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import me.nathena.infra.utils.StringUtil;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.web.context.ContextLoader;
@@ -33,6 +35,8 @@ public class AppsContext {
 	private static String server_mac_id;
 	private static String image_uri = "";
 	private static String video_uri = "";
+	//是否调试模式
+	private static String debug = "";
 	private static ApplicationContext springContext;
 	private static Properties properties;
 	
@@ -64,8 +68,9 @@ public class AppsContext {
 					static_uri      = properties.getProperty("static_uri");
 					//
 					server_mac_id   = properties.getProperty("server_mac_id");
-					image_uri      = properties.getProperty("img_uri");
-					video_uri   = properties.getProperty("video_uri");
+					image_uri      	= properties.getProperty("img_uri");
+					video_uri   	= properties.getProperty("video_uri");
+					debug 			= properties.getProperty("debug");
 				}
 				catch (IOException e) 
 				{   
@@ -162,6 +167,9 @@ public class AppsContext {
 	}
 	public static String videoUri() {
 		return video_uri;
+	}
+	public static boolean isDebug() {
+		return !StringUtil.isEmpty(debug) && "true".equals(debug);
 	}
 	public static String getProperty(String key)
 	{
