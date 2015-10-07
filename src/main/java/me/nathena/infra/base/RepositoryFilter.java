@@ -47,7 +47,7 @@ public class RepositoryFilter {
 	protected List<repositoryQuery> querys = new ArrayList<repositoryQuery>();
 	protected List<repositoryOrder> orders = new ArrayList<repositoryOrder>();
 	
-	private boolean userDefault = true;
+	private boolean defaultQuery = true;
 	
 	public RepositoryFilter() {}
 	public void clearQuery() {
@@ -61,11 +61,11 @@ public class RepositoryFilter {
 		orders.clear();
 	}
 	
-	public boolean isUserDefault() {
-		return userDefault;
+	public boolean isDefaultQuery() {
+		return defaultQuery;
 	}
-	public void setUserDefault(boolean userDefault) {
-		this.userDefault = userDefault;
+	public void setDefaultQuery(boolean userDefault) {
+		this.defaultQuery = userDefault;
 	}
 	
 	public void addQuery(String field, Object value) {
