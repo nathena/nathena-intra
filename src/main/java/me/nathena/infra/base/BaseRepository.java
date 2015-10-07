@@ -501,7 +501,10 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 
 	private void attachQuery(StringBuffer sql, RepositoryFilter filter, Map<String, Object> params) {
 		if(filter != null) {
-			filter.defaultQuery();
+			if(filter.isUserDefault()) {
+				filter.defaultQuery();
+			}
+			
 			if(!CollectionUtil.isEmpty(filter.getQuerys())) {
 				for(repositoryQuery query : filter.getQuerys()) {
 					sql.append(query.toSqlQuery(params, fieldToColumnMap));
