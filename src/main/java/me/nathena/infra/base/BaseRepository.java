@@ -768,4 +768,10 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
 	}
+
+	public void status(String id, int status) {
+		String sql = "UPDATE " + tableName + "SET `status` = :status WHERE id = :id";
+		Map<String, Object> params = new HashMap<>();
+		jdbc.commandUpdate(sql, params);
+	}
 }
