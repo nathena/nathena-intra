@@ -770,8 +770,10 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	}
 
 	public void status(String id, int status) {
-		String sql = "UPDATE " + tableName + "SET `status` = :status WHERE id = :id";
+		String sql = "UPDATE " + tableName + " SET `status` = :status WHERE id = :id";
 		Map<String, Object> params = new HashMap<>();
+		params.put("status", status);
+		params.put("id", id);
 		jdbc.commandUpdate(sql, params);
 	}
 }
