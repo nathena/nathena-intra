@@ -479,6 +479,22 @@ public final class NumberUtil
 
 		return convertNumberToChinese(sNum);
 	}
+
+	/**
+	 * 阿拉伯数字转换为英文字母
+	 * 
+	 * @param nNum
+	 * @return
+	 */
+	public static String convertNumberToLetter(Long num, boolean isUp) {
+		String numStr = num + "";
+		StringBuffer returnStr = new StringBuffer();
+        for (byte b : numStr.getBytes()) {
+        	returnStr.append((char) (isUp ? b + 16 : b + 48)); 
+        }  
+        
+        return returnStr.toString();
+	}
 	
 	public static void main(String[] arg)
 	{
