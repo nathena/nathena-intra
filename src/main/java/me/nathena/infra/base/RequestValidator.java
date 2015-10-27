@@ -121,6 +121,8 @@ public class RequestValidator {
 		}
 		
 		if(rules.length == 3) {
+			rules[INDEX_SECOND_RULE] = rules[INDEX_SECOND_RULE].toUpperCase();
+			
 			switch(rules[INDEX_SECOND_RULE]) {
 			case "MAX":
 				return  value.length() <= Integer.valueOf(rules[INDEX_SECOND_REQUIRED]);
@@ -132,7 +134,7 @@ public class RequestValidator {
 			}
 		}
 		
-		return true;
+		return !StringUtil.isEmpty(value);
 	}
 	
 	private static boolean mobileRule(String value) {
