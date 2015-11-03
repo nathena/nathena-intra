@@ -101,6 +101,11 @@ public class XssHttpWrapper extends HttpServletRequestWrapper
             // Avoid onload= e­xpressions
             scriptPattern = Pattern.compile("onload(.*?)=", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
             value = scriptPattern.matcher(value).replaceAll("");
+            
+            value = value.replaceAll("&", "&amp;");
+            value = value.replaceAll("\"", "&quot;");
+            value = value.replaceAll("<", "&lt;");
+            value = value.replaceAll(">", "&gt;");
         }
         return value;
     }
