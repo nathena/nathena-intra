@@ -26,7 +26,6 @@ public class AppsContext {
 	
 	private static ThreadLocal<RequestContext> requestContext = new ThreadLocal<RequestContext>();
 	private static String upload_tmp_path;
-	private static String upload_uri = "";
 	private static String static_uri = "";
 	private static String webRoot;
 	private static String classPath;
@@ -64,7 +63,6 @@ public class AppsContext {
 					properties.load(in);
 					
 					upload_tmp_path = properties.getProperty("upload_tmp_path");
-					upload_uri      = properties.getProperty("upload_uri");
 					static_uri      = properties.getProperty("static_uri");
 					//
 					server_mac_id   = properties.getProperty("server_mac_id");
@@ -148,11 +146,6 @@ public class AppsContext {
 	public static String uploadDir()
 	{
 		return upload_tmp_path;
-	}
-	
-	public static String uploadURI()
-	{
-		return upload_uri;
 	}
 	
 	public static String staticURI()
