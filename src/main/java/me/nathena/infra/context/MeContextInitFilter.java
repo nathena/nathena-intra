@@ -32,8 +32,9 @@ public class MeContextInitFilter implements Filter{
 		
 		try
 		{
-			AppsContext.initRequestContext((HttpServletRequest)request, (HttpServletResponse)response);
-			chain.doFilter(request, response);
+			XssHttpWrapper xssHttpWrapper = new XssHttpWrapper((HttpServletRequest)request);
+			AppsContext.initRequestContext(xssHttpWrapper, (HttpServletResponse)response);
+			chain.doFilter(xssHttpWrapper, response);
 		}
 		finally
 		{

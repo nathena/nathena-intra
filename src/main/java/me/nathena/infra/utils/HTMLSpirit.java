@@ -11,6 +11,11 @@ public class HTMLSpirit
     private static final String regEx_html = "<[^>]+\\/?>"; // 定义HTML标签的正则表达式
     private static final String regEx_space = "\\s"; // 定义HTML标签的正则表达式
     
+    private static final Pattern P_AMP = Pattern.compile("&");
+    private static final Pattern P_QUOTE = Pattern.compile("\"");
+    private static final Pattern P_LEFT_ARROW = Pattern.compile("<");
+    private static final Pattern P_RIGHT_ARROW = Pattern.compile(">");
+    
     public static String clean(String htmlStr) 
     {
         Pattern p_script = Pattern.compile(regEx_script, Pattern.CASE_INSENSITIVE);
@@ -32,4 +37,19 @@ public class HTMLSpirit
         return htmlStr.trim(); // 返回文本字符串
     }
     
+    public static String htmlSpecialChars(final String s) {
+        String result = s;
+        result = regexReplace(P_AMP, "&amp;", result);
+        result = regexReplace(P_QUOTE, "&quot;", result);
+        result = regexReplace(P_LEFT_ARROW, "&lt;", result);
+        result = regexReplace(P_RIGHT_ARROW, "&gt;", result);
+        return result;
+    }
+    
+    private static String regexReplace(final Pattern regex_pattern, final String replacement, final String s) 
+    {
+        Matcher m = regex_pattern.matcher(s);
+        return m.replaceAll(replacement);
+    }
+
 }
