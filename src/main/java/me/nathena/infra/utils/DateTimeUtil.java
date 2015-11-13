@@ -498,8 +498,8 @@ public final class DateTimeUtil
 
 	public static long getWeekStartTime() {
 		Calendar calendar = Calendar.getInstance();
-		calendar.setFirstDayOfWeek(Calendar.MONDAY);
-		calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+		calendar.setFirstDayOfWeek(Calendar.SATURDAY);
+		calendar.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
@@ -826,7 +826,7 @@ public final class DateTimeUtil
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		System.out.println(getWeekStartTime());
+		System.out.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(getWeekStartTime())));
 		System.out.println(getMonthStartTime());
 	}
 }
