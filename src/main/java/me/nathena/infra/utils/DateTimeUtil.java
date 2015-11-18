@@ -570,6 +570,20 @@ public final class DateTimeUtil
 	}
 	
 	/**
+	 * 
+	 *摘要：
+	 *@说明：根据两个日期获取之间相差多少天
+	 *@创建：作者:gaowx 	创建时间：2015-11-18
+	 */
+	public static Integer getDaysDiff(Date date1, Date date2) {
+		long d1 = date1.getTime();
+		long d2 = date2.getTime();
+		long t = (d2-d1)/1000;
+		Long l = t/(3600*24);
+		return l.intValue();
+	}
+	
+	/**
 	 * 获取时间錯到秒
 	 * @return
 	 */
