@@ -58,7 +58,7 @@ public class Uploader {
 	 * MIDI (mid)，文件头：4D546864
 	 * MP4 (mp4)，文件头：文件头：00000020667479706d70
 	 */
-	private static final String allowUploadFileType = "ffd8ffdb 89504e47 504e470d ffd8ffe1 40496e69 ffd8ffe0 47494638 d0cf11e0 49545346 25504446 504B0304 52617221 00000020667479706d70";
+	private static final String allowUploadFileType = "ffd8ffdb 89504e47 504e470d ffd8ffe1 40496e69 ffd8ffe0 47494638 d0cf11e0 49545346 25504446 504B0304 52617221 00000020667479706d70 0000001c";
 	
 	private static final String[] allowUploadFileSuffix = new String[]{"gif","jpg","jpeg","png","bmp","mp4","zip","rar"};
 	
