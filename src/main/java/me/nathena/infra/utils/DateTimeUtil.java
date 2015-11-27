@@ -835,6 +835,14 @@ public final class DateTimeUtil
 		return new Date(calendar.getTimeInMillis());
 	}
 
+	public static String int2Time(int time) {
+		int hour = time/100;
+		int minute = time%100;
+		String hourStr = hour > 10 ? String.valueOf(hour) : "0" + hour;
+		String minuteStr = minute > 10 ? String.valueOf(minute) : "0" + minute;
+		return hourStr + ":" + minuteStr;
+	}
+
 
 	/**
 	 * @param args
