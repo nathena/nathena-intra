@@ -498,8 +498,8 @@ public final class DateTimeUtil
 
 	public static long getWeekStartTime() {
 		Calendar calendar = Calendar.getInstance();
-		calendar.setFirstDayOfWeek(Calendar.SATURDAY);
-		calendar.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+		calendar.setFirstDayOfWeek(Calendar.MONDAY);
+		calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0);
