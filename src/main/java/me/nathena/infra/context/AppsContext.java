@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import me.nathena.infra.utils.StringUtil;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEvent;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.web.context.ContextLoader;
 
@@ -181,6 +182,11 @@ public class AppsContext {
 	public static <T> T getBean(Class<T> requiredType,String name)
 	{
 		return springContext.getBean(name, requiredType);
+	}
+	
+	public void pulishEvent(ApplicationEvent event)
+	{
+		springContext.publishEvent(event);
 	}
 	
 	private AppsContext(){}
