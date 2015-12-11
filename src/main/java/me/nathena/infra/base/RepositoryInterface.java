@@ -134,6 +134,4 @@ public interface RepositoryInterface<T> {
 	 * @return int
 	 */
 	public int update(T t, RepositoryFilter filter, String... updateFields);
-
-	public void status(String id, int status);
 }
