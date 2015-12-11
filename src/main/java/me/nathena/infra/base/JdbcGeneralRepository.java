@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Component(value="jdbcRepository")
 public class JdbcGeneralRepository{
 	
-	@Resource
+	@Resource(name="namedJdbcTemplate")
 	private NamedParameterJdbcTemplate namedJdbcTemplate;
 	
 	/**
