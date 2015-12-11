@@ -184,7 +184,7 @@ public class AppsContext {
 		return springContext.getBean(name, requiredType);
 	}
 	
-	public void pulishEvent(ApplicationEvent... events)
+	public static void pulishEvent(ApplicationEvent... events)
 	{
 		for(ApplicationEvent event : events)
 		{
