@@ -9,7 +9,7 @@ import me.nathena.infra.wx.beans.WxTemplate;
 
 public class WxSendTemplateMsgService {
 
-	private static String send_api = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=％s";
+	private static String send_api = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=%s";
 	
 	private WxAccessToken token;
 	
@@ -26,6 +26,6 @@ public class WxSendTemplateMsgService {
 		
 		String res = new String(result);
 		
-		LogHelper.debug("发送微信文本消息完成 => "+res);
+		LogHelper.debug("发送微信文本消息完成 => "+res+" = "+data);
 	}
 }
