@@ -3,7 +3,19 @@ package me.nathena.infra.wx.beans;
 public class WxTemplateData 
 {
 	private String value;  
-    private String color;  
+    private String color; 
+    
+    public WxTemplateData()
+    {
+    	
+    }
+    
+    public WxTemplateData(String value,String color)
+    {
+    	this.value = value;
+    	this.color = color;
+    }
+    
     public String getValue() {  
         return value;  
     }  
