@@ -39,7 +39,6 @@ public class WxSendMsgService {
 		json.put("text", con);
 		
 		String api = String.format(send_api, token.getAccessToken());
-		System.out.println(json.toJSONString());
 		
 		byte[] result = HttpUtil.doRestPost(api, json.toJSONString());
 		String res = new String(result);
