@@ -20,9 +20,7 @@ import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.StringUtil;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.cache.annotation.Cacheable;
 
-@Cacheable(value="jytnn.cache")
 public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public static enum QueryType {
 		SQL,
