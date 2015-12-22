@@ -124,9 +124,16 @@ public class EntitySpecification
 	    accessor.put(Id.class, ids);
 	    accessor.put(Column.class, fields);
 	    
+	    if( null != type.getSuperclass() )
+	    {
+	    	Map<Class<?>,Set<Field>> _accessor = getAllAccessor(type.getSuperclass());
+	    	
+	    	accessor.get(Id.class).addAll(_accessor.get(Id.class));
+	    	accessor.get(Column.class).addAll(_accessor.get(Column.class));
+	    }
+	    
 	    return accessor;
 	}
-	
 	
 	public static boolean isIdAccessor(AnnotatedElement annotatedElement)
 	{
