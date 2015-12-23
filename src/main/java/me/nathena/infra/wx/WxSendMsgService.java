@@ -3,7 +3,6 @@ package me.nathena.infra.wx;
 import me.nathena.infra.utils.HttpUtil;
 import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.StringUtil;
-import me.nathena.infra.wx.beans.WxAccessToken;
 import me.nathena.infra.wx.beans.WxSendMsgResult;
 import me.nathena.infra.wx.enums.WxMsgType;
 import me.nathena.infra.wx.exception.WxException;
@@ -15,11 +14,11 @@ public class WxSendMsgService {
 
 	private static String send_api = "https://api.weixin.qq.com/cgi-bin/message/mass/send?access_token=%s";
 	
-	private WxAccessToken token;
+	private WxAccessTokenService wxAccessTokenService;
 	
-	public WxSendMsgService(WxAccessToken token)
+	public WxSendMsgService(String appid,String appSercet)
 	{
-		this.token = token;
+		wxAccessTokenService = new WxAccessTokenService(appid,appSercet);
 	}
 	
 	public WxSendMsgResult sendText(String[] openids,String content)
@@ -38,7 +37,7 @@ public class WxSendMsgService {
 		
 		json.put("text", con);
 		
-		String api = String.format(send_api, token.getAccessToken());
+		String api = String.format(send_api, wxAccessTokenService.getToken().getAccessToken());
 		
 		byte[] result = HttpUtil.doRestPost(api, json.toJSONString());
 		String res = new String(result);

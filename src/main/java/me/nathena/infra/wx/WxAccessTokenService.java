@@ -29,7 +29,7 @@ public class WxAccessTokenService {
 		this.appSercet = appSercet;
 	}
 	
-	public WxAccessToken getAccessToken()
+	public WxAccessToken getToken()
 	{
 		if( null != token && DateTimeUtil.getTimeStamp() - token.getCreateIn() <= token.getExpiresIn() )
 		{
