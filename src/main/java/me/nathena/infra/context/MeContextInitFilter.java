@@ -14,6 +14,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import me.nathena.infra.utils.LogHelper;
+
 /**
  * @author GaoWx
  *
@@ -30,6 +32,7 @@ public class MeContextInitFilter implements Filter{
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
 		
+		LogHelper.info(" ======= context start ====== ");
 		try
 		{
 			XssHttpWrapper xssHttpWrapper = new XssHttpWrapper((HttpServletRequest)request);
@@ -38,6 +41,7 @@ public class MeContextInitFilter implements Filter{
 		}
 		finally
 		{
+			LogHelper.info(" ======= context finally ====== ");
 			AppsContext.destoryRequestContext();
 		}
 	}
