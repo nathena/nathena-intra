@@ -75,14 +75,13 @@ public final class DateTimeUtil
 		if(date == null) {
 			return "";
 		}
-		TimeZone tz = TimeZone.getTimeZone("GMT+8");
 		if (format == null) {
 			format = "yyyyMMdd HH:mm";
 		}
-		Calendar c = Calendar.getInstance();
+		Calendar c = getCalendar();
 		c.setTimeInMillis(date.getTime());
 
-		return DateFormatUtils.format(c, format, tz, Locale.US);
+		return DateFormatUtils.format(c, format, timeZone, Locale.US);
 	}
 
 	public static String getDateToStr(String dateStr,String format1,String format2)
@@ -288,7 +287,6 @@ public final class DateTimeUtil
 	 * 
 	 * @Title: getCurrentClock
 	 * @author 凤梨/nathena
-	 * @Description: TODO(这里用一句话描述这个方法的作用)
 	 * @param @return    设定文件
 	 * @return Map<Intget,Intger>    返回类型 yyyyMMddmm
 	 * @throws
@@ -488,7 +486,7 @@ public final class DateTimeUtil
 	}
 
 	public static long getMonthStartTime() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.set(Calendar.DAY_OF_MONTH, 1);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
@@ -498,7 +496,7 @@ public final class DateTimeUtil
 	}
 
 	public static long getWeekStartTime() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.setFirstDayOfWeek(Calendar.MONDAY);
 		calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -687,7 +685,7 @@ public final class DateTimeUtil
 
 
 	public static Date getMonthEndFromMills(long time) {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.setTimeInMillis(time);
 		calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
@@ -698,7 +696,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getMonthStartFromMills(long time) {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.setTimeInMillis(time);
 		calendar.setFirstDayOfWeek(Calendar.MONDAY);
 		calendar.set(Calendar.DAY_OF_MONTH, 1);
@@ -710,7 +708,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date MonthEnd() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.add(Calendar.MONTH, 1);
 		calendar.set(Calendar.DAY_OF_MONTH, 0);
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
@@ -721,7 +719,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date nextMonth(int n) {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.add(Calendar.MONTH, n);
 		return new Date(calendar.getTimeInMillis());
 	}
@@ -749,7 +747,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getTodayEnd(){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
 		calendar.set(Calendar.MINUTE, 59);
 		calendar.set(Calendar.SECOND, 59);
@@ -758,7 +756,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getDayStartFromMills(long mills){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.setTimeInMillis(mills);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
@@ -768,7 +766,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getDayEndFromMills(long mills){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.setTimeInMillis(mills);
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
 		calendar.set(Calendar.MINUTE, 59);
@@ -778,7 +776,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getNextday(long mills){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.setTimeInMillis(mills);
 		calendar.add(Calendar.DATE, 1);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
@@ -789,7 +787,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getDaysLater(long mills, int day){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.setTimeInMillis(mills);
 		calendar.add(Calendar.DATE, day);
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
@@ -800,7 +798,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getDaysLater(int day){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.add(Calendar.DATE, day);
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
 		calendar.set(Calendar.MINUTE, 59);
@@ -817,7 +815,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getYesterdayBegin(){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.add(Calendar.DATE, -1);
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
@@ -827,7 +825,7 @@ public final class DateTimeUtil
 	}
 
 	public static Date getYesterdayEnd(){
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = getCalendar();
 		calendar.add(Calendar.DATE, -1);
 		calendar.set(Calendar.HOUR_OF_DAY, 23);
 		calendar.set(Calendar.MINUTE, 59);
