@@ -387,4 +387,8 @@ public final class StringUtil
 		suffix.append(count);
 		return suffix.toString();
 	}
+
+	public static boolean isLetter(char ch) {
+		return Character.isLowerCase(ch) || Character.isUpperCase(ch);
+	}
 }
