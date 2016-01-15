@@ -25,12 +25,20 @@ public final class StringUtil
 	 * @param str
 	 * @return 空返回 true,非空返回false
 	 */
-	public static boolean isEmpty(Object str) {
-		if (str == null) {
-			return true;
-		} else if (str.toString().trim().length() == 0) {
-			return true;
-		} else if (str.toString().trim().equals("null")) {
+	public static boolean isEmpty(Object... strs) {
+		boolean entry = false;
+		for (Object str : strs) {
+			entry = true;
+			if (str == null) {
+				return true;
+			} else if (str.toString().trim().length() == 0) {
+				return true;
+//			} else if (str.toString().trim().equals("null")) {
+//				return true;
+			}
+		}
+
+		if (!entry) {
 			return true;
 		}
 		return false;
