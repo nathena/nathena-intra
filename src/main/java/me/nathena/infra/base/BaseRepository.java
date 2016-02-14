@@ -3,6 +3,7 @@ package me.nathena.infra.base;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -401,6 +402,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public T get( Object key ) {
 		return get(key,new String[]{});
 	}
+	
 	/**
 	 * TODO 这个方法写的不好
 	 */
@@ -598,6 +600,26 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	}
 	
 	@Override
+	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor) {
+		try {
+			StringBuffer sql = new StringBuffer("SELECT * FROM `");
+			
+			sql.append(tableName).append("` WHERE 1");
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
+			
+			sql.append(" LIMIT 1");
+			T po = jdbc.getEntity(entityClass, sql.toString(), params);
+			return dataConvertor.convertFromPo(po);
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+	
+	@Override
 	public int delete(RepositoryFilter filter) {
 		try {
 			StringBuffer sql = new StringBuffer("DELETE FROM `").append(tableName).append("` WHERE 1 ");
@@ -765,5 +787,50 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		} catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
 		}
+	}
+
+	@Override
+	public <T2> T2 get(Object key, DataConvertor<T2, T> dataConvertor) {
+		T po = get(key);
+		return dataConvertor.convertFromPo(po);
+	}
+
+	@Override
+	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor, String... requiredFields) {
+		T po = get(filter, requiredFields);
+		return dataConvertor.convertFromPo(po);
+	}
+
+	@Override
+	public <T2> List<T2> load(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor, String... requiredFields) {
+		List<T> pos = load(filter, requiredFields);
+		
+		return convertList(pos, dataConvertor);
+	}
+
+	@Override
+	public <T2> List<T2> load(RepositoryFilter filter, int pageNo, int rowSize, DataConvertor<T2, T> dataConvertor,
+			String... requiredFields) {
+		List<T> pos = load(filter, pageNo, rowSize, requiredFields);
+		
+		return convertList(pos, dataConvertor);
+	}
+
+	@Override
+	public <T2> List<T2> load(RepositoryFilter filter, int limit, DataConvertor<T2, T> dataConvertor,
+			String... requiredFields) {
+		List<T> pos = load(filter, limit, requiredFields);
+		
+		return convertList(pos, dataConvertor);
+	}
+	
+	private <T2> List<T2> convertList(List<T> pos, DataConvertor<T2, T> dataConvertor) {
+		//TODO 如果此处出现瓶颈 可以将转换操作放入load方法的循环里面
+		List<T2> returns = new ArrayList<T2>();
+		if(!CollectionUtil.isEmpty(pos))
+			for(T po : pos)
+				returns.add(dataConvertor.convertFromPo(po));
+		
+		return returns;
 	}
 }

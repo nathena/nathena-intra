@@ -50,14 +50,7 @@ public interface RepositoryInterface<T> {
 	 * @param t void
 	 */
 	public void delete(Object key);
-	/**
-	 * 
-	 * <p>Title: get</p> 
-	 * <p>Description: 获取</p> 
-	 * @param key
-	 * @return T
-	 */
-	public T get(Object key);
+	
 	/**
 	 * 
 	 * <p>Title: get</p> 
@@ -66,6 +59,25 @@ public interface RepositoryInterface<T> {
 	 * @return T
 	 */
 	public T merge(T t);
+	
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 获取</p> 
+	 * @param key
+	 * @return T
+	 */
+	public T get(Object key);
+	
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 根据键值,因为直接得到的数据都是数据库对应表的bean,可能会不对应业务对象,直接传入转换器转换为业务对象,该操作不需要每次都放入service做</p> 
+	 * @param filter 搜索条件
+	 * @return T2
+	 */
+	public <T2> T2 get(Object key, DataConvertor<T2, T> dataConvertor);
+	
 	/**
 	 * 
 	 * <p>Title: get</p> 
@@ -74,16 +86,38 @@ public interface RepositoryInterface<T> {
 	 * @return T
 	 */
 	public T get(RepositoryFilter filter);
+	
 	/**
 	 * 
 	 * <p>Title: get</p> 
-	 * <p>Description: 根据搜索条件获取,</p> 
+	 * <p>Description: 根据搜索条件获取,因为直接得到的数据都是数据库对应表的bean,可能会不对应业务对象,直接传入转换器转换为业务对象,该操作不需要每次都放入service做</p> 
+	 * @param filter 搜索条件
+	 * @return T2
+	 */
+	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor);
+	
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 根据搜索条件获取</p> 
 	 * @param filter 搜索条件
 	 * @param requiredFields 本次查询需要的属性名称(ps:是对象的属性不是数据库字段),
 	 * 						   该入参主要为了优化数据来源是关系型数据库的时的sql,为空则返回完整对象
 	 * @return T
 	 */
 	public T get(RepositoryFilter filter, String... requiredFields);
+	
+	/**
+	 * 
+	 * <p>Title: get</p> 
+	 * <p>Description: 根据搜索条件获取,因为直接得到的数据都是数据库对应表的bean,可能会不对应业务对象,直接传入转换器转换为业务对象,该操作不需要每次都放入service做</p> 
+	 * @param filter 搜索条件
+	 * @param requiredFields 本次查询需要的属性名称(ps:是对象的属性不是数据库字段),
+	 * 						   该入参主要为了优化数据来源是关系型数据库的时的sql,为空则返回完整对象
+	 * @return T2
+	 */
+	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor, String... requiredFields);
+	
 	/**
 	 * 
 	 * <p>Title: load</p> 
@@ -92,6 +126,16 @@ public interface RepositoryInterface<T> {
 	 * @return T
 	 */
 	public List<T> load(RepositoryFilter filter, String... requiredFields);
+	
+	/**
+	 * 
+	 * <p>Title: load</p> 
+	 * <p>Description: 获取,因为直接得到的数据都是数据库对应表的bean,可能会不对应业务对象,直接传入转换器转换为业务对象,该操作不需要每次都放入service做</p> 
+	 * @param key
+	 * @return T2
+	 */
+	public <T2> List<T2> load(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor, String... requiredFields);
+	
 	/**
 	 * 
 	 * <p>Title: load</p> 
@@ -100,6 +144,16 @@ public interface RepositoryInterface<T> {
 	 * @return T
 	 */
 	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize, String... requiredFields);
+	
+	/**
+	 * 
+	 * <p>Title: load</p> 
+	 * <p>Description: 获取,因为直接得到的数据都是数据库对应表的bean,可能会不对应业务对象,直接传入转换器转换为业务对象,该操作不需要每次都放入service做</p> 
+	 * @param key
+	 * @return T
+	 */
+	public <T2> List<T2> load(RepositoryFilter filter, int pageNo, int rowSize, DataConvertor<T2, T> dataConvertor, String... requiredFields);
+	
 	/**
 	 * 
 	 * <p>Title: load</p> 
@@ -108,6 +162,16 @@ public interface RepositoryInterface<T> {
 	 * @return T
 	 */
 	public List<T> load(RepositoryFilter filter, int limit, String... requiredFields);
+	
+	/**
+	 * 
+	 * <p>Title: load</p> 
+	 * <p>Description: 获取,因为直接得到的数据都是数据库对应表的bean,可能会不对应业务对象,直接传入转换器转换为业务对象,该操作不需要每次都放入service做</p> 
+	 * @param key
+	 * @return T
+	 */
+	public <T2> List<T2> load(RepositoryFilter filter, int limit, DataConvertor<T2, T> dataConvertor, String... requiredFields);
+	
 	/**
 	 * 
 	 * <p>Title: total</p> 

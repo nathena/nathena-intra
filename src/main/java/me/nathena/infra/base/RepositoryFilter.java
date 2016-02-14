@@ -16,7 +16,9 @@ import me.nathena.infra.utils.StringUtil;
 /**
  * 2015-09-08
  * reponsitory层的查询接口类,
- * 理论需要支持多种数据存储方式的查询,目前只支持简单sql的查询
+ * 理论需要支持多种数据存储方式的查询
+ * 只适用于简单查询,因为简单查询多数是等值查询,模糊匹配等具有相似性可抽象
+ * 复杂的数据查询应根据使用的数据持久化技术写查询代码,因为复杂查询一般只适用于某些具体业务不具备复用性
  * @author GaoWx
  *
  */
@@ -96,6 +98,21 @@ public class RepositoryFilter {
 		querys.add(new repositoryQuery(field, value, method, connect));
 	}
 	
+	public void addGroupQuery(String field, Object value, queryMethod method, queryConnect connect) {
+		if(value == null) {
+			return;
+		}
+		
+		repositoryQuery lastQuery = querys.get(querys.size() - 1);
+		if(lastQuery.isGroupQuery()) {
+			lastQuery.addGroupQuery(field, value, method, connect);
+		} else {
+			lastQuery = new repositoryQuery(connect);
+			lastQuery.addGroupQuery(field, value, method, null);
+			querys.add(lastQuery);
+		}
+	}
+	
 	public void addOrder(String field, orderby orderby) {
 		orders.add(new repositoryOrder(field, orderby));
 	}
@@ -117,6 +134,7 @@ class repositoryQuery {
 	private Object value;
 	private RepositoryFilter.queryMethod queryMethod;
 	private RepositoryFilter.queryConnect queryConnect;
+	private List<repositoryQuery> groupQuerys;
 	
 	public repositoryQuery(String field, Object value, 
 			RepositoryFilter.queryMethod method, RepositoryFilter.queryConnect connect) {
@@ -126,68 +144,57 @@ class repositoryQuery {
 		this.queryConnect = connect;
 	}
 	
+	public repositoryQuery(RepositoryFilter.queryConnect connect) {
+		this.queryConnect = connect;
+		groupQuerys = new ArrayList<repositoryQuery>();
+	}
+	
+	public void addGroupQuery(String field, Object value, 
+			RepositoryFilter.queryMethod method, RepositoryFilter.queryConnect connect) {
+		groupQuerys.add(new repositoryQuery(field, value, method, connect));
+	}
+	
+	public boolean isGroupQuery() {
+		return groupQuerys != null;
+	}
+	
 	public String toSqlQuery(Map<String, Object> nameParamMap, Map<String, String> columnMap) {
-		if(CollectionUtil.isEmpty(columnMap) || !columnMap.containsKey(field)) {
+		if(!isGroupQuery() && ( CollectionUtil.isEmpty(columnMap) || 
+				!columnMap.containsKey(field) || StringUtil.isEmpty(columnMap.get(field)))) {
+			LogHelper.warn("RepositoryFilter出错");
 			LogHelper.warn("columnMap:" + columnMap);
 			LogHelper.warn("field名字写错:" + field);
 			return "";
 		}
 		
-		String column = columnMap.get(field);
-		if(StringUtil.isEmpty(column)) {
-			LogHelper.error("\n == 属性名属性错误" + field);
-			return null;
+		StringBuilder resultStr = new StringBuilder(queryConnect == null ? "" : " " + queryConnect.name());
+		
+		if(!CollectionUtil.isEmpty(groupQuerys)) {
+			resultStr.append(" (");
+			for(repositoryQuery q : groupQuerys) {
+				resultStr.append(q.toSqlQuery(nameParamMap, columnMap));
+			}
+			resultStr.append(")");
+		} else {
+			String column = columnMap.get(field);
+			
+			String r = field + RandomHelper.nextString(3);
+			switch(queryMethod) {
+			case IN:
+				resultStr.append(" `").append(column).append("` IN").append(" (:").append(r).append(")");
+				nameParamMap.put(r, value);
+				break;
+//			case BETWEEN_AND:
+//				paramMap.put(r + "1", value);
+//				paramMap.put(r + "2", value2);
+//				return new StringBuffer(" ").append(connect).append(" `").append(column).append("` BETWEEN :").append(column).append(r).append("1").append(" AND :").append(column).append(r).append("2").toString();
+			default:
+				resultStr.append(" `").append(column).append("` ").append(queryMethod.getValue()).append(" :").append(r);
+				nameParamMap.put(r, value);
+			}
 		}
 		
-		String r = field + RandomHelper.nextString(3);
-		switch(queryMethod) {
-		case IN:
-			nameParamMap.put(r, value);
-			return new StringBuffer(" ").append(queryConnect.name())
-					.append(" `").append(column).append("` IN").append(" (:").append(r).append(")").toString();
-//		case BETWEEN_AND:
-//			paramMap.put(r + "1", value);
-//			paramMap.put(r + "2", value2);
-//			return new StringBuffer(" ").append(connect).append(" `").append(column).append("` BETWEEN :").append(column).append(r).append("1").append(" AND :").append(column).append(r).append("2").toString();
-		default:
-			nameParamMap.put(r, value);
-			return new StringBuffer(" ").append(queryConnect.name())
-					.append(" `").append(column).append("` ")
-					.append(queryMethod.getValue()).append(" :").append(r)
-					.toString();
-		}
-	}
-
-	public String getField() {
-		return field;
-	}
-
-	public Object getValue() {
-		return value;
-	}
-
-	public RepositoryFilter.queryMethod getQueryMethod() {
-		return queryMethod;
-	}
-
-	public RepositoryFilter.queryConnect getQueryConnect() {
-		return queryConnect;
-	}
-
-	public void setField(String field) {
-		this.field = field;
-	}
-
-	public void setValue(Object value) {
-		this.value = value;
-	}
-
-	public void setQueryMethod(RepositoryFilter.queryMethod queryMethod) {
-		this.queryMethod = queryMethod;
-	}
-
-	public void setQueryConnect(RepositoryFilter.queryConnect queryConnect) {
-		this.queryConnect = queryConnect;
+		return resultStr.toString();
 	}
 }
 
@@ -207,24 +214,5 @@ class repositoryOrder {
 			return null;
 		}
 		return new StringBuffer("`").append(columnMap.get(field)).append("` ").append(queryOrder.name()).toString();
-	}
-	
-	public RepositoryFilter.orderby getQueryOrder() {
-		return queryOrder;
-	}
-	public String getField() {
-		return field;
-	}
-	
-	public RepositoryFilter.orderby getSqlOrder() {
-		return queryOrder;
-	}
-	
-	public void setField(String field) {
-		this.field = field;
-	}
-	
-	public void setQueryOrder(RepositoryFilter.orderby queryOrder) {
-		this.queryOrder = queryOrder;
 	}
 }
