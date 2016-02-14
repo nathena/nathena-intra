@@ -792,13 +792,19 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public <T2> T2 get(Object key, DataConvertor<T2, T> dataConvertor) {
 		T po = get(key);
-		return dataConvertor.convertFromPo(po);
+		
+		T2 returnBean = dataConvertor.convertFromPo(po);
+		dataConvertor.build(returnBean, jdbc);
+		return returnBean;
 	}
 
 	@Override
 	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor, String... requiredFields) {
 		T po = get(filter, requiredFields);
-		return dataConvertor.convertFromPo(po);
+		
+		T2 returnBean = dataConvertor.convertFromPo(po);
+		dataConvertor.build(returnBean, jdbc);
+		return returnBean;
 	}
 
 	@Override
@@ -830,6 +836,8 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		if(!CollectionUtil.isEmpty(pos))
 			for(T po : pos)
 				returns.add(dataConvertor.convertFromPo(po));
+		
+		dataConvertor.builds(returns, jdbc);
 		
 		return returns;
 	}
