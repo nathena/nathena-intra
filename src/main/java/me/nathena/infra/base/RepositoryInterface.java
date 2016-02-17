@@ -90,15 +90,6 @@ public interface RepositoryInterface<T> {
 	/**
 	 * 
 	 * <p>Title: get</p> 
-	 * <p>Description: 根据搜索条件获取,因为直接得到的数据都是数据库对应表的bean,可能会不对应业务对象,直接传入转换器转换为业务对象,该操作不需要每次都放入service做</p> 
-	 * @param filter 搜索条件
-	 * @return T2
-	 */
-	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor);
-	
-	/**
-	 * 
-	 * <p>Title: get</p> 
 	 * <p>Description: 根据搜索条件获取</p> 
 	 * @param filter 搜索条件
 	 * @param requiredFields 本次查询需要的属性名称(ps:是对象的属性不是数据库字段),

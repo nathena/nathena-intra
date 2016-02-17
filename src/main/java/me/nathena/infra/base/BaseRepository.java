@@ -16,11 +16,11 @@ import javax.annotation.Resource;
 import javax.persistence.Column;
 import javax.persistence.Id;
 
+import org.apache.commons.lang3.StringUtils;
+
 import me.nathena.infra.utils.CollectionUtil;
 import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.StringUtil;
-
-import org.apache.commons.lang3.StringUtils;
 
 public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public static enum QueryType {
@@ -499,7 +499,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		return value==null || ( transientFields.contains(fieldame) && ("0".equals(value.toString()) || "0.0".equals(value.toString())) );
 	}
 
-	private void attachQuery(StringBuffer sql, RepositoryFilter filter, Map<String, Object> params) {
+	private void attachQuery(StringBuilder sql, RepositoryFilter filter, Map<String, Object> params) {
 		if(filter != null) {
 			if(filter.isDefaultQuery()) {
 				filter.defaultQuery();
@@ -513,7 +513,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		}
 	}
 	
-	private void attachOrder(StringBuffer sql, RepositoryFilter filter, Map<String, Object> params) {
+	private void attachOrder(StringBuilder sql, RepositoryFilter filter, Map<String, Object> params) {
 		if(filter != null) {
 			filter.defaultOrder();
 			if(!CollectionUtil.isEmpty(filter.getOrders())) {
@@ -530,7 +530,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public int count(RepositoryFilter filter) {
 		try {
-			StringBuffer sql = new StringBuffer("SELECT count(1) FROM `").append(tableName).append("` WHERE 1");
+			StringBuilder sql = new StringBuilder("SELECT count(1) FROM `").append(tableName).append("` WHERE 1");
 			
 			if(filter == null) {
 				return jdbc.queryForInt(sql.toString());
@@ -549,7 +549,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public T get(RepositoryFilter filter, String... requiredFields) {
 		try {
-			StringBuffer sql = new StringBuffer("SELECT ");
+			StringBuilder sql = new StringBuilder("SELECT ");
 			if(CollectionUtil.isEmpty(requiredFields)) {
 				sql.append("*");
 			} else {
@@ -583,7 +583,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public T get(RepositoryFilter filter) {
 		try {
-			StringBuffer sql = new StringBuffer("SELECT * FROM `");
+			StringBuilder sql = new StringBuilder("SELECT * FROM `");
 			
 			sql.append(tableName).append("` WHERE 1");
 			
@@ -600,29 +600,9 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	}
 	
 	@Override
-	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor) {
-		try {
-			StringBuffer sql = new StringBuffer("SELECT * FROM `");
-			
-			sql.append(tableName).append("` WHERE 1");
-			
-			Map<String, Object> params = new HashMap<String, Object>();
-			
-			attachQuery(sql, filter, params);
-			attachOrder(sql, filter, params);
-			
-			sql.append(" LIMIT 1");
-			T po = jdbc.getEntity(entityClass, sql.toString(), params);
-			return dataConvertor.convertFromPo(po);
-		} catch(Exception e) {
-			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
-		}
-	}
-	
-	@Override
 	public int delete(RepositoryFilter filter) {
 		try {
-			StringBuffer sql = new StringBuffer("DELETE FROM `").append(tableName).append("` WHERE 1 ");
+			StringBuilder sql = new StringBuilder("DELETE FROM `").append(tableName).append("` WHERE 1 ");
 			
 			Map<String, Object> params = new HashMap<String, Object>();
 			
@@ -639,7 +619,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		try {
 			Map<String,Object> paramMap = new HashMap<String, Object>();
 			
-			StringBuffer sb = new StringBuffer(" UPDATE `");
+			StringBuilder sb = new StringBuilder(" UPDATE `");
 			sb.append(tableName);
 			sb.append("` SET ");
 			String sp="";
@@ -684,7 +664,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public List<T> load(RepositoryFilter filter, String... requiredFields) {
 		try {
-			StringBuffer sql = new StringBuffer("SELECT ");
+			StringBuilder sql = new StringBuilder("SELECT ");
 			if(CollectionUtil.isEmpty(requiredFields)) {
 				sql.append("*");
 			} else {
@@ -718,7 +698,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public List<T> load(RepositoryFilter filter, int pageNo, int rowSize,
 			String... requiredFields) {
 		try {
-			StringBuffer sql = new StringBuffer("SELECT ");
+			StringBuilder sql = new StringBuilder("SELECT ");
 			if(CollectionUtil.isEmpty(requiredFields)) {
 				sql.append("*");
 			} else {
@@ -756,7 +736,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	public List<T> load(RepositoryFilter filter, int limit,
 			String... requiredFields) {
 		try {
-			StringBuffer sql = new StringBuffer("SELECT ");
+			StringBuilder sql = new StringBuilder("SELECT ");
 			if(CollectionUtil.isEmpty(requiredFields)) {
 				sql.append("*");
 			} else {
@@ -791,51 +771,225 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 
 	@Override
 	public <T2> T2 get(Object key, DataConvertor<T2, T> dataConvertor) {
-		T po = get(key);
+		if(dataConvertor == null) {	
+			LogHelper.error("数据转换对象不能为空dataConvertor:null");
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY);
+		}
 		
-		T2 returnBean = dataConvertor.convertFromPo(po);
-		dataConvertor.build(returnBean, jdbc);
-		return returnBean;
+		if(dataConvertor.getConvertClass() == null) {
+			T po = get(key);
+			
+			T2 bean = dataConvertor.convert(po);
+			dataConvertor.build(bean, jdbc);
+			
+			return bean;
+		}
+		
+		try {
+			Map<String,Object> paramMap = new HashMap<String, Object>();
+			
+			StringBuilder sb = getSelectSql(dataConvertor);
+			
+			String sp=" and ";
+			
+			if( idFields.size()>1 && EntitySpecification.isEmbeddableAccessor(key)) {
+				Map<Class<?>,Set<Field>> accessor = EntitySpecification.getAllAccessor(key.getClass());
+				Set<Field> keyField = accessor.get(Column.class);
+				
+				Field field = null;
+				String name = null;
+				Method method = null;
+				Object val = null;
+				Iterator<Field> fieldIter = keyField.iterator();
+				while(fieldIter.hasNext()) {
+					field = fieldIter.next();
+					name = EntitySpecification.getName(field);
+					method = EntitySpecification.getReadMethod(field);
+					val = method.invoke(key);
+					
+					sb.append(sp).append("`").append(name).append("` = :"+name);
+					sp=" and ";
+					
+					paramMap.put(name, val);
+				}
+			} else {
+				String fieldName = idFields.iterator().next();
+				String column = fieldToColumnMap.get(fieldName);
+				
+				sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+				paramMap.put(fieldName, key);
+			}
+			
+			T2 bean = jdbc.getEntity(dataConvertor.getConvertClass(), sb.toString(), paramMap);
+			dataConvertor.build(bean, jdbc);
+			
+			return bean;
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
 	}
 
 	@Override
 	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor, String... requiredFields) {
-		T po = get(filter, requiredFields);
+		if(dataConvertor == null) {	
+			LogHelper.error("数据转换对象不能为空dataConvertor:null");
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY);
+		}
 		
-		T2 returnBean = dataConvertor.convertFromPo(po);
-		dataConvertor.build(returnBean, jdbc);
-		return returnBean;
+		if(dataConvertor.getConvertClass() == null) {
+			T po = get(filter, requiredFields);
+			
+			T2 bean = dataConvertor.convert(po);
+			dataConvertor.build(bean, jdbc);
+			
+			return bean;
+		}
+		
+		try {
+			StringBuilder sql = getSelectSql(dataConvertor, requiredFields);
+						
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
+			
+			sql.append(" LIMIT 1");
+			T2 bean = jdbc.getEntity(dataConvertor.getConvertClass(), sql.toString(), params);
+			dataConvertor.build(bean, jdbc);
+			return bean;
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
 	}
-
+	
 	@Override
 	public <T2> List<T2> load(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor, String... requiredFields) {
-		List<T> pos = load(filter, requiredFields);
+		if(dataConvertor == null) {	
+			LogHelper.error("数据转换对象不能为空dataConvertor:null");
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY);
+		}
 		
-		return convertList(pos, dataConvertor);
+		if(dataConvertor.getConvertClass() == null) {
+			List<T> po = load(filter, requiredFields);
+			
+			return convertList(po, dataConvertor);
+		}
+		
+		try {
+			StringBuilder sql = getSelectSql(dataConvertor, requiredFields);
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
+			
+			List<T2> beans = jdbc.getList(dataConvertor.getConvertClass(), sql.toString(), params);
+			dataConvertor.builds(beans, jdbc);
+			return beans;
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
 	}
 
 	@Override
 	public <T2> List<T2> load(RepositoryFilter filter, int pageNo, int rowSize, DataConvertor<T2, T> dataConvertor,
 			String... requiredFields) {
-		List<T> pos = load(filter, pageNo, rowSize, requiredFields);
+		if(dataConvertor == null) {	
+			LogHelper.error("数据转换对象不能为空dataConvertor:null");
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY);
+		}
 		
-		return convertList(pos, dataConvertor);
+		if(dataConvertor.getConvertClass() == null) {
+			List<T> po = load(filter, pageNo, rowSize, requiredFields);
+			
+			return convertList(po, dataConvertor);
+		}
+		
+		try {
+			StringBuilder sql = getSelectSql(dataConvertor, requiredFields);
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
+			
+			sql.append(" LIMIT :rowOffset, :rowSize");
+			params.put("rowOffset", (pageNo - 1) * rowSize);
+			params.put("rowSize", rowSize);
+			
+			List<T2> beans = jdbc.getList(dataConvertor.getConvertClass(), sql.toString(), params);
+			dataConvertor.builds(beans, jdbc);
+			return beans;
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
 	}
 
 	@Override
 	public <T2> List<T2> load(RepositoryFilter filter, int limit, DataConvertor<T2, T> dataConvertor,
 			String... requiredFields) {
-		List<T> pos = load(filter, limit, requiredFields);
+		if(dataConvertor == null) {	
+			LogHelper.error("数据转换对象不能为空dataConvertor:null");
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY);
+		}
 		
-		return convertList(pos, dataConvertor);
+		if(dataConvertor.getConvertClass() == null) {
+			List<T> po = load(filter, limit, requiredFields);
+			
+			return convertList(po, dataConvertor);
+		}
+		
+		try {
+			StringBuilder sql = getSelectSql(dataConvertor, requiredFields);
+			
+			Map<String, Object> params = new HashMap<String, Object>();
+			
+			attachQuery(sql, filter, params);
+			attachOrder(sql, filter, params);
+			
+			sql.append(" LIMIT :limit");
+			params.put("limit", limit);
+			
+			List<T2> beans = jdbc.getList(dataConvertor.getConvertClass(), sql.toString(), params);
+			dataConvertor.builds(beans, jdbc);
+			return beans;
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+	
+	private StringBuilder getSelectSql(DataConvertor<?, T> dataConvertor, String... requiredFields) {
+		if(dataConvertor == null) {
+			LogHelper.error("数据转换对象不能为空dataConvertor:" + dataConvertor);
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY);
+		}
+		
+		StringBuilder sql = new StringBuilder("SELECT ");
+		Set<String> selectFields = fieldToColumnMap.keySet();
+		if(!CollectionUtil.isEmpty(requiredFields)) selectFields = new HashSet<>(Arrays.asList(requiredFields));
+		String split = "";
+		for(String field : selectFields) {
+			String rewriteField = dataConvertor.fieldConvert(field);
+			String column = fieldToColumnMap.get(field);
+			if(StringUtil.isEmpty(column)) {
+				LogHelper.error("\n ===========================\n 属性名错误:" + field + "找不到对应的数据库字段\n=========================");
+				continue;
+			}
+			rewriteField = (rewriteField == null ? field : rewriteField);
+			sql.append(split).append(" `").append(column).append("` AS `").append(rewriteField).append("`");
+			split = ",";
+		}
+		
+		sql.append(" FROM `").append(tableName).append("` WHERE 1");
+		
+		return sql;
 	}
 	
 	private <T2> List<T2> convertList(List<T> pos, DataConvertor<T2, T> dataConvertor) {
-		//TODO 如果此处出现瓶颈 可以将转换操作放入load方法的循环里面
 		List<T2> returns = new ArrayList<T2>();
 		if(!CollectionUtil.isEmpty(pos))
 			for(T po : pos)
-				returns.add(dataConvertor.convertFromPo(po));
+				returns.add(dataConvertor.convert(po));
 		
 		dataConvertor.builds(returns, jdbc);
 		
