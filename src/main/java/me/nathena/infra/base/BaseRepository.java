@@ -969,7 +969,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		if(!CollectionUtil.isEmpty(requiredFields)) selectFields = new HashSet<>(Arrays.asList(requiredFields));
 		String split = "";
 		for(String field : selectFields) {
-			String rewriteField = dataConvertor.fieldConvert(field);
+			String rewriteField = dataConvertor.getConvertField(field);
 			String column = fieldToColumnMap.get(field);
 			if(StringUtil.isEmpty(column)) {
 				LogHelper.error("\n ===========================\n 属性名错误:" + field + "找不到对应的数据库字段\n=========================");
@@ -994,5 +994,117 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		dataConvertor.builds(returns, jdbc);
 		
 		return returns;
+	}
+
+	public static final String[] zero_field = new String[]{};
+	@Override
+	public <T2> T2 get(RepositoryFilter filter, DataConvertor<T2, T> dataConvertor) {
+		return get(filter, dataConvertor, zero_field);
+	}
+
+	@Override
+	public <T2> T2 save(T2 t2, DataConvertor<T2, T> dataConvertor) {
+		if(t2 == null || dataConvertor == null) {
+			//TODO
+			return null;
+		}
+		
+		try {
+			boolean autoKey = true;
+			
+			Map<String,Object> paramMap = new HashMap<String, Object>();
+			
+			StringBuilder sb = new StringBuilder(" INSERT INTO `");
+			sb.append(tableName).append("` ( ");
+			String split="";
+			
+			StringBuilder values = new StringBuilder();
+			
+			Object val = null;
+			Iterator<String> fieldIter = fieldToColumnMap.keySet().iterator();
+			while(fieldIter.hasNext()) {
+				String field = fieldIter.next();
+				String column = fieldToColumnMap.get(field);
+				val = dataConvertor.getConvertValue(t2, field);
+				
+				if(!isTransientValue(field,val)) {
+					sb.append(split).append("`").append(column).append("`");
+					values.append(split).append(":"+field);
+					paramMap.put(field, val);
+					
+					split=", ";
+					
+					if(idFields.contains(field)){
+						autoKey = false;
+					}
+				}
+			}
+			sb.append(") values ( ").append(values).append(" ) ");
+			//自增主键的情况 TODO 不知道会不会有错
+			if(jdbc.commandUpdate(sb.toString(),paramMap)>0 && idFields.size() == 1 && autoKey)  {
+				String fieldName = idFields.iterator().next();
+				String rewriteFieldName = dataConvertor.getConvertField(fieldName);
+				rewriteFieldName = (rewriteFieldName == null ? fieldName : rewriteFieldName);
+				Field field = t2.getClass().getDeclaredField(fieldName);
+				if(field != null) {
+					Method method = EntitySpecification.getWriteMethod(field);
+					method.invoke(t2, jdbc.getAutoIncrementId());
+				}
+			}
+			
+			return t2;
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_CREATE,e);
+		}
+	}
+
+	@Override
+	public <T2> T2 update(T2 t2, DataConvertor<T2, T> dataConvertor, String... updateFields) {
+		try {
+			Map<String,Object> paramMap = new HashMap<String, Object>();
+			
+			StringBuilder sb = new StringBuilder(" UPDATE `");
+			sb.append(tableName);
+			sb.append("` SET ");
+			String sp="";
+			
+			Object val = null;
+			Iterator<String> fieldIter = fieldToColumnMap.keySet().iterator();
+			while(fieldIter.hasNext()) {
+				String fieldName = fieldIter.next();
+				if(idFields.contains(fieldName)) {
+					continue;
+				}
+				
+				String column = fieldToColumnMap.get(fieldName);
+				val = dataConvertor.getConvertValue(t2, fieldName);
+				
+				if(!StringUtil.isEmpty(column) && !isTransientValue(fieldName,val)) {
+					sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+					paramMap.put(fieldName, val);
+					
+					sp=", ";
+				}
+			}
+			
+			sp=" WHERE ";
+			fieldIter = idFields.iterator();
+			while(fieldIter.hasNext()) {
+				String idField = fieldIter.next();
+				String column = fieldToColumnMap.get(idField);
+				val = dataConvertor.getConvertValue(t2, idField);
+				
+				sb.append(sp).append("`").append(column).append("` = :"+idField);
+				sp=" AND ";
+				
+				paramMap.put(idField, val);
+			}
+			
+			jdbc.commandUpdate(sb.toString(),paramMap);
+			
+			return t2;
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
+		}
 	}
 }
