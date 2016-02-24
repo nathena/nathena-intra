@@ -6,6 +6,6 @@ public interface QueryFilter {
 
 	public Map<String,Object> getQuqeryParams();
 
-	public String getQuerySql();
-	public String getCountSql();
+	public String getQuerySql(final String tableName);
+	public String getCountSql(final String tableName);
 }
