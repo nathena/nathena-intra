@@ -495,6 +495,29 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		}
 	}
 	
+	public List<T> load(QueryFilter filter)
+	{
+		try
+		{
+			return jdbc.getList(entityClass, filter.getQuerySql(),filter.getQuqeryParams());
+		}
+		catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+	
+	public int count(QueryFilter filter)
+	{
+		try
+		{
+			return jdbc.queryForInt(filter.getCountSql(),filter.getQuqeryParams());
+		}
+		catch(Exception e) 
+		{
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
+		}
+	}
+	
 	private boolean isTransientValue(String fieldame, Object value) {
 		return value==null || ( transientFields.contains(fieldame) && ("0".equals(value.toString()) || "0.0".equals(value.toString())) );
 	}
