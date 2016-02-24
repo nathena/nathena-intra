@@ -76,7 +76,7 @@ public final class DateTimeUtil
 			return "";
 		}
 		if (format == null) {
-			format = "yyyyMMdd HH:mm";
+			format = ymdhm;
 		}
 		Calendar c = getCalendar();
 		c.setTimeInMillis(date.getTime());
