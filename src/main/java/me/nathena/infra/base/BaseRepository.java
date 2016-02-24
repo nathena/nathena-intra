@@ -643,10 +643,15 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 
 				if(!StringUtil.isEmpty(column)) {
 					val = method.invoke(t);
-					sb.append(sp).append("`").append(column).append("` = :"+fieldName);
-					paramMap.put(fieldName, val);
 					
-					sp=" , ";
+					if( !isTransientValue(fieldName,val) )//null不更新
+					{
+						sb.append(sp).append("`").append(column).append("` = :"+fieldName);
+						paramMap.put(fieldName, val);
+						
+						sp=" , ";
+					}
+					
 				} else {
 					LogHelper.error("\n == 属性名属性错误" + fieldName);
 				}
