@@ -31,7 +31,18 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 		return countSql.toString();
 	}
 
-	public abstract StringBuilder buildSqlNamed();
-	public abstract StringBuilder buildSqlOffset();
-	public abstract StringBuilder buildSqlOrderBy();
+	public StringBuilder buildSqlNamed()
+	{
+		return new StringBuilder();
+	}
+	
+	public StringBuilder buildSqlOffset()
+	{
+		return new StringBuilder();
+	}
+	
+	public StringBuilder buildSqlOrderBy()
+	{
+		return new StringBuilder();
+	}
 }
