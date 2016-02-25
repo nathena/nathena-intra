@@ -69,6 +69,10 @@ public interface RepositoryInterface<T> {
 	 */
 	public T get(Object key);
 	
+	public List<T> load(QueryFilter filter);
+	
+	public int count(QueryFilter filter);
+	
 	//********************************//
 	/**
 	 * 
