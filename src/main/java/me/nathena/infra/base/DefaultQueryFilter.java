@@ -8,10 +8,6 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 	protected StringBuilder countSql = new StringBuilder("select count(1) from ");
 	protected StringBuilder querySql = new StringBuilder("select * from ");
 	
-	protected StringBuilder namedSql = new StringBuilder();
-	protected StringBuilder offsetSql = new StringBuilder();
-	protected StringBuilder orderBySql = new StringBuilder();
-	
 	protected Map<String,Object> namedParams = new HashMap<String, Object>();
 	
 	@Override
@@ -19,20 +15,13 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 		return namedParams;
 	}
 	
-	protected DefaultQueryFilter()
-	{
-		buildNamedParams();
-		buildOffset();
-		buildOrderBy();
-	}
-
 	@Override
 	public final String getQueryNamedSql(final String tableName) {
 		
 		querySql.append(" `").append(tableName).append("` ").append(" where 1 ")
-			.append(namedSql)
-			.append(orderBySql)
-			.append(offsetSql);
+			.append(buildNamedSql())
+			.append(buildOrderBySql())
+			.append(buildOffsetSql());
 		
 		return querySql.toString();
 	}
@@ -40,23 +29,24 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 	@Override
 	public final String getCountNamedSql(final String tableName) {
 		
-		countSql.append(" `").append(tableName).append("` ").append(" where 1 ").append(namedSql);
+		countSql.append(" `").append(tableName).append("` ").append(" where 1 ")
+			.append(buildNamedSql());
 		
 		return countSql.toString();
 	}
 
-	public void buildNamedParams()
+	public StringBuilder buildNamedSql()
 	{
-		
+		return new StringBuilder();
 	}
 	
-	public void buildOffset()
+	public StringBuilder buildOffsetSql()
 	{
-		
+		return new StringBuilder();
 	}
 	
-	public void buildOrderBy()
+	public StringBuilder buildOrderBySql()
 	{
-		
+		return new StringBuilder();
 	}
 }
