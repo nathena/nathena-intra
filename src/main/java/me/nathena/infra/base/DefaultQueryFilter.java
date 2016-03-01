@@ -10,6 +10,22 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 	
 	protected Map<String,Object> namedParams = new HashMap<String, Object>();
 	
+	public int pageNo = 0;
+	public int offset = 0;
+	
+	public int getPageNo() {
+		return pageNo;
+	}
+	public void setPageNo(int pageNo) {
+		this.pageNo = pageNo;
+	}
+	public int getOffset() {
+		return offset;
+	}
+	public void setOffset(int offset) {
+		this.offset = offset;
+	}
+	
 	@Override
 	public final Map<String, Object> getNamedParams() {
 		return namedParams;
@@ -20,8 +36,13 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 		
 		querySql.append(" `").append(tableName).append("` ").append(" where 1 ")
 			.append(buildNamedSql())
-			.append(buildOrderBySql())
-			.append(buildOffsetSql());
+			.append(buildOrderBySql());
+		
+		if( pageNo>0 && offset>0 )
+		{
+			querySql.append(" limit ");
+			querySql.append((pageNo-1)*offset).append(",").append(offset);
+		}
 		
 		return querySql.toString();
 	}
@@ -36,11 +57,6 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 	}
 
 	public StringBuilder buildNamedSql()
-	{
-		return new StringBuilder();
-	}
-	
-	public StringBuilder buildOffsetSql()
 	{
 		return new StringBuilder();
 	}
