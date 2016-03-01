@@ -4,8 +4,8 @@ import java.util.Map;
 
 public interface QueryFilter {
 
-	public Map<String,Object> getQuqeryParams();
+	public Map<String,Object> getNamedParams();
 
-	public String getQuerySql(final String tableName);
-	public String getCountSql(final String tableName);
+	public String getQueryNamedSql(final String tableName);
+	public String getCountNamedSql(final String tableName);
 }

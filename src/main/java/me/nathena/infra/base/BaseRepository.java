@@ -499,7 +499,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	{
 		try
 		{
-			return jdbc.getList(entityClass, filter.getQuerySql(tableName),filter.getQuqeryParams());
+			return jdbc.getList(entityClass, filter.getQueryNamedSql(tableName),filter.getNamedParams());
 		}
 		catch(Exception e) {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_QUERY,e);
@@ -510,7 +510,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	{
 		try
 		{
-			return jdbc.queryForInt(filter.getCountSql(tableName),filter.getQuqeryParams());
+			return jdbc.queryForInt(filter.getCountNamedSql(tableName),filter.getNamedParams());
 		}
 		catch(Exception e) 
 		{
