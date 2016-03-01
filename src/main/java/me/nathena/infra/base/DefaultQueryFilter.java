@@ -10,12 +10,12 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 	protected Map<String,Object> params = new HashMap<String, Object>();
 	
 	@Override
-	public Map<String, Object> getQuqeryParams() {
+	public final Map<String, Object> getQuqeryParams() {
 		return params;
 	}
 
 	@Override
-	public String getQuerySql(final String tableName) {
+	public final String getQuerySql(final String tableName) {
 		
 		querySql.append(" `").append(tableName).append("` ").append(" where 1 ").append(buildSqlNamed())
 			    .append(buildSqlOrderBy()).append(buildSqlOffset());
@@ -24,25 +24,14 @@ public abstract class DefaultQueryFilter implements QueryFilter {
 	}
 
 	@Override
-	public String getCountSql(final String tableName) {
+	public final String getCountSql(final String tableName) {
 		
 		countSql.append(" `").append(tableName).append("` ").append(" where 1 ").append(buildSqlNamed());
 		
 		return countSql.toString();
 	}
 
-	public StringBuilder buildSqlNamed()
-	{
-		return new StringBuilder();
-	}
-	
-	public StringBuilder buildSqlOffset()
-	{
-		return new StringBuilder();
-	}
-	
-	public StringBuilder buildSqlOrderBy()
-	{
-		return new StringBuilder();
-	}
+	public abstract StringBuilder buildSqlNamed();
+	public abstract StringBuilder buildSqlOffset();
+	public abstract StringBuilder buildSqlOrderBy();
 }
