@@ -1135,4 +1135,60 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_UPDATE,e);
 		}
 	}
+	
+	@Override
+	public void batchSave(List<T> ts, String... ignoreFields) {
+		try {
+			boolean autoKey = false;
+			StringBuilder sb = new StringBuilder(" insert into `");
+			sb.append(tableName).append("` ( ");
+			
+			StringBuilder values = new StringBuilder();
+			
+			Object val = null;
+			Iterator<String> fieldIter = fieldToColumnMap.keySet().iterator();
+			String split="";
+			Map<String, Object>[] paramMap = new Map[ts.size()];
+			List<String> ignores = Arrays.asList(ignoreFields);
+			while(fieldIter.hasNext()) {
+				String field = fieldIter.next();
+				String column = fieldToColumnMap.get(field);
+//				if(ignores.contains(field) && idFields.contains(field)) {
+//					LogHelper.error("===================\n批量插入暂不支持自增主键\n====================");
+//					throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_CREATE);
+//				}
+				
+				if(ignores.contains(field)) {
+					continue;
+				}
+				
+				sb.append(split).append("`").append(column).append("`");
+				values.append(split).append(":"+field);
+				split=" , ";
+				
+				Method method = fieldToMethodMap.get(field);
+				//TODO 这里有个o(nm)的复杂度
+				for(int i = 0; i < ts.size(); i++) {
+					val = method.invoke(ts.get(i));
+					if(paramMap[i] == null) paramMap[i] = new HashMap<>();
+					paramMap[i].put(field, val);
+				}
+			}
+			
+			sb.append(") values ( ").append(values).append(" ) ");
+			
+			int[] affects = jdbc.batchUpdate(sb.toString(), paramMap);
+//			if(affects.length == ts.size() && autoKey)  {
+//				int lastAutoKey = jdbc.getAutoIncrementId();
+//				
+//				for(int i = ts.size() - 1; i >= 0; i++) {
+//					String idField = idFields.iterator().next();
+//					
+//					ts.get(i)
+//				}
+//			}
+		} catch(Exception e) {
+			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_CREATE,e);
+		}
+	}
 }

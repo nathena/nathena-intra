@@ -220,4 +220,13 @@ public interface RepositoryInterface<T> {
 	 * @param updateFields
 	 */
 	public <T2> T2 update(T2 t2, DataConvertor<T2, T> dataConvertor, String... updateFields);
+	
+	/**
+	 * 为了偷懒写一个通用的批量插入的方法
+	 * 全字段插入,不需要插入的字段写在ignoreFields上,不返回插入的数据
+	 * TODO 有需要改进的地方,待改进 2016-3-2 Gaowx
+	 * @param ts
+	 * @param ignoreFields
+	 */
+	public void batchSave(List<T> ts, String... ignoreFields);
 }
