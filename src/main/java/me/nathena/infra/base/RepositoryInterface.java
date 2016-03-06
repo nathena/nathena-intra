@@ -229,4 +229,11 @@ public interface RepositoryInterface<T> {
 	 * @param ignoreFields
 	 */
 	public void batchSave(List<T> ts, String... ignoreFields);
+	
+	/**
+	 * 根据条件判断数据是否存在
+	 * @param filter
+	 * @return
+	 */
+	public boolean exist(RepositoryFilter filter);
 }

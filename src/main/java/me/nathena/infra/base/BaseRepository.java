@@ -1191,4 +1191,17 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 			throw new RepositoryGeneralException(ExceptionCode.BASE_JDBC_CREATE,e);
 		}
 	}
+
+	@Override
+	public boolean exist(RepositoryFilter filter) {
+		StringBuilder sql = new StringBuilder(" SELECT 1 FROM `");
+		sql.append(tableName).append("` WHERE 1 AND ");
+		
+		Map<String, Object> params = new HashMap<String, Object>();
+		
+		attachQuery(sql, filter, params);
+		
+		Integer result = jdbc.queryForInt(sql.toString(), params);
+		return result != null && result > 0;
+	}
 }
