@@ -1200,7 +1200,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 		Map<String, Object> params = new HashMap<String, Object>();
 		
 		attachQuery(sql, filter, params);
-		
+		sql.append(" LIMIT 1");
 		Integer result = jdbc.queryForInt(sql.toString(), params);
 		return result != null && result > 0;
 	}
