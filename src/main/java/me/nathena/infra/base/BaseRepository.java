@@ -1195,7 +1195,7 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	@Override
 	public boolean exist(RepositoryFilter filter) {
 		StringBuilder sql = new StringBuilder(" SELECT 1 FROM `");
-		sql.append(tableName).append("` WHERE 1 AND ");
+		sql.append(tableName).append("` WHERE 1 ");
 		
 		Map<String, Object> params = new HashMap<String, Object>();
 		
