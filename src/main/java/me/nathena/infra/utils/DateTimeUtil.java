@@ -33,6 +33,10 @@ public final class DateTimeUtil
 	private static Map<Integer, String> weekDays = new HashMap<Integer, String>();
 	private static Map<Integer, String> weekDaysEn = new HashMap<Integer, String>();
 	
+    public static final int ADD_UNIT_DAY = 5;
+    public static final int ADD_UNIT_MONTH = 2;
+    public static final int ADD_UNIT_YEAR = 1;
+    
 	static{
 		
 		weekDays.put(1, "周日");
