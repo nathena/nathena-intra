@@ -1,6 +1,9 @@
 package me.nathena.infra.utils;
 
+import com.alibaba.fastjson.JSONObject;
+
 import java.net.InetAddress;
+import java.util.Arrays;
 
 public class UUIDHexGenerator
 {
@@ -95,5 +98,7 @@ public class UUIDHexGenerator
         
         UUIDHexGenerator gen = new UUIDHexGenerator();
         System.out.println(gen.generateUUID());
+
+        System.out.println(JSONObject.toJSONString(Arrays.asList("312", "ase")));
     }
 }
