@@ -17,6 +17,7 @@ import me.nathena.infra.utils.LogHelper;
 import me.nathena.infra.utils.StringUtil;
 
 import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -90,7 +91,8 @@ public class Uploader {
 				{
 					if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
 					{
-						throw new RuntimeException("上传文件扩展名是不允许的扩展名。\n只允许" + allowUploadFileSuffix + "格式。");
+						throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
+								"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
 					}
 					
 					savedName = saveFile(data, path, name + "." + fileExt);
@@ -141,7 +143,8 @@ public class Uploader {
 					String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
 					if( null != fileExt ) {
 						if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt)) {
-							throw new RuntimeException("上传文件扩展名是不允许的扩展名。\n只允许" + allowUploadFileSuffix + "格式。");
+							throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
+									"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
 						}
 
 						savedName = saveFile(data, path, name + suffix + "." + fileExt);
@@ -196,7 +199,8 @@ public class Uploader {
 				{
 					if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
 					{
-						throw new RuntimeException("上传文件扩展名是不允许的扩展名。\n只允许" + allowUploadFileSuffix + "格式。");
+						throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
+								"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
 					}
 					
 					savedName = saveFile(data, path, name + "." + fileExt);
@@ -246,7 +250,8 @@ public class Uploader {
 				{
 					if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
 					{
-						throw new RuntimeException("上传文件扩展名是不允许的扩展名。\n只允许" + allowUploadFileSuffix + "格式。");
+						throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
+								"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
 					}
 					
 					savedName = saveFile(data, path, name + "." + fileExt);
@@ -290,7 +295,8 @@ public class Uploader {
 			{
 				if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
 				{
-					throw new RuntimeException("上传文件扩展名是不允许的扩展名。\n只允许" + allowUploadFileSuffix + "格式。");
+					throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
+							"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
 				}
 				
 				savedName = saveFile(data, path, name + "." + fileExt);

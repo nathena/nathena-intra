@@ -14,7 +14,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import me.nathena.infra.utils.IpUtil;
 import me.nathena.infra.utils.LogHelper;
 
 /**
@@ -35,8 +34,6 @@ public class MeContextInitFilter implements Filter{
 		
 		LogHelper.info(" ======= context start ====== ");
 		HttpServletRequest httpRequest = (HttpServletRequest) request;
-		LogHelper.info(" |ip:" + IpUtil.getRemoteAddr(httpRequest));
-		LogHelper.info(" |resource:" + httpRequest.getMethod() + " " + (httpRequest).getRequestURI());
 		try
 		{
 			XssHttpWrapper xssHttpWrapper = new XssHttpWrapper(httpRequest);
