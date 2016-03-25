@@ -32,7 +32,7 @@ public interface RepositoryInterface<T> {
 	 * @param t
 	 * @return T
 	 */
-	public T update(T t, String... ignoreUpdateFileds);
+	public T update(T t, String... forceUpdateFileds);
 	
 	/**
 	 * 
