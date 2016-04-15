@@ -17,17 +17,17 @@ public final class DateTimeUtil
 	public static final String ymdhm = "yyyy-MM-dd HH:mm";
 	public static final String ymdhms = "yyyy-MM-dd HH:mm:ss";
 
-	private static final long ONE_MINUTE = 60000L;  
-    private static final long ONE_HOUR = 3600000L;  
-    private static final long ONE_DAY = 86400000L;  
-    private static final long ONE_WEEK = 604800000L;  
+	public static final long ONE_MINUTE = 60000L;
+    public static final long ONE_HOUR = 3600000L;
+    public static final long ONE_DAY = 86400000L;
+    public static final long ONE_WEEK = 604800000L;
   
-    private static final String ONE_SECOND_AGO = "秒前";  
-    private static final String ONE_MINUTE_AGO = "分钟前";  
-    private static final String ONE_HOUR_AGO = "小时前";  
-    private static final String ONE_DAY_AGO = "天前";  
-    private static final String ONE_MONTH_AGO = "月前";  
-    private static final String ONE_YEAR_AGO = "年前";
+    public static final String ONE_SECOND_AGO = "秒前";
+    public static final String ONE_MINUTE_AGO = "分钟前";
+    public static final String ONE_HOUR_AGO = "小时前";
+    public static final String ONE_DAY_AGO = "天前";
+    public static final String ONE_MONTH_AGO = "月前";
+    public static final String ONE_YEAR_AGO = "年前";
 	
 	private static TimeZone timeZone  = TimeZone.getTimeZone("Asia/Shanghai");
 	private static Map<Integer, String> weekDays = new HashMap<Integer, String>();

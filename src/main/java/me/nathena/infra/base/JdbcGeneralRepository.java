@@ -673,7 +673,11 @@ public class JdbcGeneralRepository{
 		}
 		return null;
 	}
-	
+
+	public <T> List<T> query(String sql, Map<String, ?> paramMap, RowMapper<T> rowMapper) {
+		return namedJdbcTemplate.query(sql, paramMap, rowMapper);
+	}
+
 	/**
 	 * 自增主键
 	 * @return
