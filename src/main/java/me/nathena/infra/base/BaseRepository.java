@@ -524,6 +524,16 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 
 	private void attachQuery(StringBuilder sql, RepositoryFilter filter, Map<String, Object> params) {
 		if(filter != null) {
+			if(filter instanceof SqlQueryAdaptor) {
+				SqlQueryAdaptor sqlFilter = (SqlQueryAdaptor)filter;
+				if(sqlFilter.getQuerySql().isEmpty())
+					return;
+				
+				sql.append(" AND ").append(sqlFilter.getQuerySql());
+				params.putAll(sqlFilter.getNamedParams() );
+				return;
+			}
+			
 			if(filter.isDefaultQuery()) {
 				filter.defaultQuery();
 			}
@@ -538,6 +548,12 @@ public abstract class BaseRepository<T> implements RepositoryInterface<T> {
 	
 	private void attachOrder(StringBuilder sql, RepositoryFilter filter, Map<String, Object> params) {
 		if(filter != null) {
+			if(filter instanceof SqlQueryAdaptor) {
+				SqlQueryAdaptor sqlFilter = (SqlQueryAdaptor)filter;
+				sql.append(sqlFilter.getOrderSql());
+				return;
+			}
+			
 			filter.defaultOrder();
 			if(!CollectionUtil.isEmpty(filter.getOrders())) {
 				sql.append(" ORDER BY ");

@@ -4,23 +4,27 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
-
-import me.nathena.infra.context.AppsContext;
-import me.nathena.infra.utils.LogHelper;
-import me.nathena.infra.utils.StringUtil;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+
+import me.nathena.infra.context.AppsContext;
 
 public class Uploader {
 
@@ -63,6 +67,201 @@ public class Uploader {
 	
 	private static final String[] allowUploadFileSuffix = new String[]{"gif","jpg","jpeg","png","bmp","mp4","zip","rar"};
 	
+	private static boolean useDefault = false;
+	
+	private static Set<String> allowUploadExts = new HashSet<>();
+	private static Map<String, String> extToTypeBytes = new HashMap<>();
+	static {
+		try {
+			loadMimeTypes();
+			initSetting();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void initSetting() {
+		if(useDefault) {
+			allowUploadExts.add("gif");
+			allowUploadExts.add("jpg");
+			allowUploadExts.add("jpeg");
+			allowUploadExts.add("png");
+			allowUploadExts.add("bmp");
+			allowUploadExts.add("mp4");
+			allowUploadExts.add("zip");
+			allowUploadExts.add("rar");
+		}
+		
+		extToTypeBytes.put("jpeg", "FFD8FFE1");extToTypeBytes.put("jpg", "FFD8FFe1");
+		extToTypeBytes.put("png", "89504E47");extToTypeBytes.put("gif", "47494638");
+		extToTypeBytes.put("tif", "49492A00");extToTypeBytes.put("bmp", "424D");
+		extToTypeBytes.put("dwg", "41433130");extToTypeBytes.put("psd", "38425053");
+		extToTypeBytes.put("rtf", "7B5C727466");extToTypeBytes.put("xml", "3C3F786D6C");
+		extToTypeBytes.put("html", "68746D6C3E");extToTypeBytes.put("eml", "44656C69766572792D646174653A");
+		extToTypeBytes.put("dbx", "CFAD12FEC5FD746F");extToTypeBytes.put("pst", "2142444E");
+		extToTypeBytes.put("xls", "D0CF11E0");extToTypeBytes.put("doc", "D0CF11E0");
+		extToTypeBytes.put("mdb", "5374616E64617264204A");extToTypeBytes.put("wpd", "FF575043");
+		extToTypeBytes.put("eps", "252150532D41646F6265");extToTypeBytes.put("ps", "252150532D41646F6265");
+		extToTypeBytes.put("pdf", "AC9EBD8F");extToTypeBytes.put("qdf", "AC9EBD8F");
+		extToTypeBytes.put("pwl", "E3828596");extToTypeBytes.put("zip", "504B0304");
+		extToTypeBytes.put("rar", "52617221");extToTypeBytes.put("wav", "57415645");
+		extToTypeBytes.put("avi", "41564920");extToTypeBytes.put("ram", "2E524D46");
+		extToTypeBytes.put("rm", "2E524D46");extToTypeBytes.put("mpg", "000001BA");//TODO MPEG (mpg)，文件头：000001B3 
+		extToTypeBytes.put("mov", "6D6F6F76");extToTypeBytes.put("asf", "3026B2758E66CF11");
+		extToTypeBytes.put("mid", "4D546864");extToTypeBytes.put("mp4", "00000020667479706d70");
+	}
+	
+	private static void loadMimeTypes() throws IOException {
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("mime-types.properties");
+		if( null != in ) {
+			Properties properties = new Properties();   
+			properties.load(in);
+			String allowUpload = properties.getProperty("upload_allow");
+			
+			if(StringUtil.isEmpty(allowUpload)) {
+				useDefault = true;
+				LogHelper.warn("==== 没有自定义上传类型限制,将允许默认上传类型");
+			} else {
+				allowUploadExts.addAll(Arrays.asList(allowUpload.split(",")));
+			}
+		} else {
+			useDefault = true;
+		}
+	}
+	
+	private static void validate(byte[] b, String fileExt) {
+		if(!allowUploadExts.contains(fileExt)) {
+			LogHelper.error("allow etxs:" + StringUtils.join(allowUploadExts, ",") + ",really etx:" + fileExt);
+			
+			throw new RuntimeException("不被允许扩展名");
+		}
+		
+		if (b != null) 
+		{
+			int size = b.length;
+			String hex = null;
+			StringBuilder contentType = new StringBuilder();
+			for (int i = 0; i < size; i++) 
+			{
+				hex = Integer.toHexString(b[i] & 0xFF);
+				if (hex.length() == 1) 
+				{
+					hex = "0" + hex;
+				}
+				contentType.append(hex);
+				if (i > 2) 
+				{
+					break;
+				}
+			}
+			
+			String byteStr = extToTypeBytes.get(fileExt);
+			if(byteStr != null && contentType.toString().startsWith(byteStr)) {
+				LogHelper.error("expect byte data:" + byteStr.toLowerCase() + ",really byte data:" + contentType);
+				throw new RuntimeException("不支持的上传类型");
+			}
+		}
+	}
+	
+	/**
+	 * 不指定文件参数名的上传--单文件
+	 * @param request
+	 * @param path
+	 * @param name
+	 * @return
+	 * @throws IOException
+	 * @throws RuntimeException
+	 */
+	public static String saveAsFile(HttpServletRequest request, String path, Object name) throws IOException,RuntimeException 
+	{
+		if( null == request || StringUtil.isEmpty(path) || StringUtil.isEmpty(name) )
+		{
+			throw new RuntimeException("上传文件参数有错");
+		}
+		
+		String savedName = "";
+		try
+		{
+			MultipartHttpServletRequest picRequest = (MultipartHttpServletRequest) request;
+			Map<String, MultipartFile> tmpfiles = picRequest.getFileMap();
+	
+			if (!CollectionUtil.isEmpty(tmpfiles)) 
+			{
+				MultipartFile file = tmpfiles.get(0);
+				byte[] data = file.getBytes();
+				
+				//检查扩展名
+				String tmpfileName = file.getOriginalFilename();
+				String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
+				validate(data, fileExt);
+				
+				savedName = saveFile(data, path, name + "." + fileExt);
+			}
+			else
+			{
+				LogHelper.info(" ==== Uploader saveAsFile 上传文件为空");
+			}
+		}
+		catch(ClassCastException e)
+		{
+			LogHelper.error(e.getMessage(), e);
+		}
+
+		return savedName;
+	}
+	
+	/**
+	 * 不指定文件参数名的上传--多文件
+	 * @param request
+	 * @param path
+	 * @param name
+	 * @return
+	 * @throws IOException
+	 * @throws RuntimeException
+	 */
+	public static List<String> saveAsFiles(HttpServletRequest request, String path, Object name) throws IOException,RuntimeException 
+	{
+		if( null == request || StringUtil.isEmpty(path) || StringUtil.isEmpty(name) )
+		{
+			throw new RuntimeException("上传文件参数有错");
+		}
+		
+		List<String> fileNames = new ArrayList<>();
+		try
+		{
+			MultipartHttpServletRequest picRequest = (MultipartHttpServletRequest) request;
+			Map<String, MultipartFile> tmpfiles = picRequest.getFileMap();
+	
+			if (!CollectionUtil.isEmpty(tmpfiles)) 
+			{
+				for(MultipartFile file: tmpfiles.values()) {
+					if (null != file && 0<file.getSize() ) 
+					{
+						byte[] data = file.getBytes();
+						
+						//检查扩展名
+						String tmpfileName = file.getOriginalFilename();
+						String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
+						validate(data, fileExt);
+						
+						String savedName = saveFile(data, path, name + "." + fileExt);
+						fileNames.add(savedName);
+					}
+				}
+			}
+			else
+			{
+				LogHelper.info(" ==== Uploader saveAsFile 上传文件为空");
+			}
+		}
+		catch(ClassCastException e)
+		{
+			LogHelper.error(e.getMessage(), e);
+		}
+
+		return fileNames;
+	}
+	
 	public static String saveAsFile(HttpServletRequest request,String uploadName, String path, Object name) throws IOException,RuntimeException 
 	{
 		if( null == request || StringUtil.isEmpty(uploadName) || StringUtil.isEmpty(path) || StringUtil.isEmpty(name) )
@@ -79,24 +278,13 @@ public class Uploader {
 			if (null != tmpfile && 0<tmpfile.getSize() ) 
 			{
 				byte[] data = tmpfile.getBytes();
-				if (!validateType(data)) 
-				{
-					throw new RuntimeException("不支持的上传类型");
-				}
 				
-				//检查扩展名
+				//数据检验
 				String tmpfileName = tmpfile.getOriginalFilename();
 				String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
-				if( null != fileExt )
-				{
-					if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
-					{
-						throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
-								"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
-					}
-					
-					savedName = saveFile(data, path, name + "." + fileExt);
-				}
+				validate(data, fileExt);
+				
+				savedName = saveFile(data, path, name + "." + fileExt);
 			}
 			else
 			{
@@ -134,22 +322,14 @@ public class Uploader {
 				String suffix = index ++ + "";
 				if (null != tmpfile && 0<tmpfile.getSize() ) {
 					byte[] data = tmpfile.getBytes();
-					if (!validateType(data)) {
-						throw new RuntimeException("不支持的上传类型");
-					}
-
-					//检查扩展名
+					
+					//数据检验
 					String tmpfileName = tmpfile.getOriginalFilename();
 					String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
-					if( null != fileExt ) {
-						if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt)) {
-							throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
-									"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
-						}
-
-						savedName = saveFile(data, path, name + suffix + "." + fileExt);
-						fileNames.add(savedName);
-					}
+					validate(data, fileExt);
+					
+					savedName = saveFile(data, path, name + suffix + "." + fileExt);
+					fileNames.add(savedName);
 				}
 				else {
 					LogHelper.info(" ==== Uploader saveAsFile 上传文件 "+uploadName+" 为空");
@@ -181,30 +361,13 @@ public class Uploader {
 			if (null != tmpfile && 0<tmpfile.getSize() ) 
 			{
 				byte[] data = tmpfile.getBytes();
-				if (!validateType(data)) 
-				{
-					throw new RuntimeException("不支持的上传类型");
-				}
-				
-				//检查文件大小
-				if(tmpfile.getSize() > maxSize)
-				{
-					throw new RuntimeException("上传文件大小超过限制。");
-				}
 				
 				//检查扩展名
 				String tmpfileName = tmpfile.getOriginalFilename();
 				String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
-				if( null != fileExt )
-				{
-					if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
-					{
-						throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
-								"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
-					}
-					
-					savedName = saveFile(data, path, name + "." + fileExt);
-				}
+				validate(data, fileExt);
+				
+				savedName = saveFile(data, path, name + "." + fileExt);
 			}
 			else
 			{
@@ -232,30 +395,13 @@ public class Uploader {
 			if (null != file && 0<file.getSize() ) 
 			{
 				byte[] data = file.getBytes();
-				if (!validateType(data)) 
-				{
-					throw new RuntimeException("不支持的上传类型");
-				}
-				
-				//检查文件大小
-				if(file.getSize() > maxSize)
-				{
-					throw new RuntimeException("上传文件大小超过限制。");
-				}
 				
 				//检查扩展名
 				String tmpfileName = file.getOriginalFilename();
 				String fileExt = tmpfileName.substring(tmpfileName.lastIndexOf(".") + 1).toLowerCase();
-				if( null != fileExt )
-				{
-					if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
-					{
-						throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
-								"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
-					}
-					
-					savedName = saveFile(data, path, name + "." + fileExt);
-				}
+				validate(data, fileExt);
+				
+				savedName = saveFile(data, path, name + "." + fileExt);
 			}
 			else
 			{
@@ -276,31 +422,14 @@ public class Uploader {
 		
 		if (null != item && !item.isFormField() && 0 < item.getSize()) 
 		{
-			String fileName = item.getName();
 			byte[] data = item.get();
-			if (!validateType(data)) 
-			{
-				throw new RuntimeException("不支持的上传类型");
-			}
-			
-			//检查文件大小
-			if(item.getSize() > maxSize)
-			{
-				throw new RuntimeException("上传文件大小超过限制。");
-			}
 			
 			//检查扩展名
+			String fileName = item.getName();
 			String fileExt = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-			if( null != fileExt )
-			{
-				if(!Arrays.<String>asList(allowUploadFileSuffix).contains(fileExt))
-				{
-					throw new RuntimeException("上传文件扩展名是不允许的扩展名" + fileExt + 
-							"。只允许" + StringUtils.join(allowUploadFileSuffix, ",") + "格式。");
-				}
-				
-				savedName = saveFile(data, path, name + "." + fileExt);
-			}
+			validate(data, fileExt);
+			
+			savedName = saveFile(data, path, name + "." + fileExt);
 		}
 
 		return savedName;
