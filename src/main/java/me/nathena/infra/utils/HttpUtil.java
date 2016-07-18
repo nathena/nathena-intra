@@ -1,5 +1,6 @@
 package me.nathena.infra.utils;
 
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -186,7 +187,7 @@ public final class HttpUtil
 		{
 			if(params != null)
 			{
-				post.setEntity(new StringEntity(params, HTTP.UTF_8));
+				post.setEntity(new StringEntity(params, Charset.forName("UTF-8")));
 			}
 
 			CloseableHttpResponse response = httpclient.execute(post);
@@ -216,7 +217,7 @@ public final class HttpUtil
 		{
 			if(params != null)
 			{
-				post.setEntity(new StringEntity(params, HTTP.UTF_8));
+				post.setEntity(new StringEntity(params, Charset.forName("UTF-8")));
 			}
 
 			CloseableHttpResponse response = httpclient.execute(post);
