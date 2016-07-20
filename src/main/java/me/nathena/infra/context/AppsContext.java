@@ -93,7 +93,7 @@ public class AppsContext {
 		
     	if( null == springContext )
     	{
-			springContext = new ClassPathXmlApplicationContext(new String[]{"classpath:applicationContext*.xml"});
+			springContext = new ClassPathXmlApplicationContext(new String[]{"classpath*:applicationContext*.xml"});
     	}
 	}
 	
